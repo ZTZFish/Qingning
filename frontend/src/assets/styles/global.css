@@ -1,0 +1,26 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  background-color: #f5f7fa;
+}
+
+:root {
+  --el-color-primary: #4caf50; /* 青柠绿 */
+  --el-color-primary-light-3: #79c37b;
+  --el-color-primary-light-5: #a5d6a7;
+  --el-color-primary-light-7: #d1ead2;
+  --el-color-primary-light-8: #e0f2e1;
+  --el-color-primary-light-9: #f1f8f1;
+  --el-color-primary-dark-2: #388e3c;
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--el-color-primary);
+  --el-button-border-color: var(--el-color-primary);
+  --el-button-hover-bg-color: var(--el-color-primary-light-3);
+  --el-button-hover-border-color: var(--el-color-primary-light-3);
+  --el-button-active-bg-color: var(--el-color-primary-dark-2);
+  --el-button-active-border-color: var(--el-color-primary-dark-2);
+}

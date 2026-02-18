@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int              @id @default(autoincrement())
+  username   String           @unique
+  password   String           // 建议实际使用 bcrypt 等加密
+  email      String           @unique
+  role       Role             @default(USER)
+  ledClubs   Club[]           // 作为负责人的社团
+  activities UserActivity[]   // 参加的活动
+}
+
+model VerificationCode {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  LEADER
+  USER
+}
+
+model Club {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  type         String        @default("未知")
+  description  String?       @db.Text
+  leaderId     Int
+  status       Status        @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  leader       User          @relation(fields: [leaderId], references: [id])
+  activities   Activity[]
+  announcements Announcement[]  // 新增：社团公告
+}
+
+model Activity {
+  id           Int              @id @default(autoincrement())
+  clubId       Int
+  name         String
+  description  String?          @db.Text
+  date         DateTime         // 活动开始时间（可自行修改默认值）
+  location     String?
+  status       Status           @default(PENDING)
+  createdAt    DateTime         @default(now())
+  endAt        DateTime           
+
+  club         Club             @relation(fields: [clubId], references: [id])
+  participants UserActivity[]
+}
+
+model Announcement {
+  id          Int      @id @default(autoincrement())
+  clubId      Int
+  title       String
+  content     String   @db.Text
+  pinned      Boolean  @default(false)  // 是否置顶
+  createdAt   DateTime @default(now())
+  club        Club     @relation(fields: [clubId], references: [id])
+}
+
+model UserActivity {
+  userId     Int
+  activityId Int
+  joinedAt   DateTime @default(now())
+  notes      String? @db.Text
+  status     Status   @default(PENDING)  // 如 PENDING(报名待审), APPROVED(已参加)
+
+  @@id([userId, activityId]) //复合主键
+
+  user       User     @relation(fields: [userId], references: [id])
+  activity   Activity @relation(fields: [activityId], references: [id])
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
