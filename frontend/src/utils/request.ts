@@ -41,8 +41,8 @@ service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data;
 
-    // 如果返回的状态码不是 200，则认为是错误
-    if (res.code !== 200 && res.code !== 0) {
+    // 如果返回的状态码不是 200 或 201，则认为是错误
+    if (res.code !== 200 && res.code !== 0 && res.code !== 201) {
       // 这里可以根据具体的业务逻辑进行处理，比如弹出错误提示
       console.error(res.message || "Error");
       return Promise.reject(new Error(res.message || "Error"));

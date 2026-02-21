@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -19,11 +19,11 @@ export const sendVerificationEmail = async (to: string, code: string) => {
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to,
-    subject: '【青柠社团管理系统】注册验证码',
+    subject: "【青柠社团管理系统】验证码",
     html: `
       <div style="padding: 20px; background-color: #f1f8f1; border-radius: 10px; font-family: sans-serif;">
         <h2 style="color: #4caf50;">您好！</h2>
-        <p>感谢您注册青柠社团管理系统。您的注册验证码为：</p>
+        <p>感谢您使用青柠社团管理系统。您的验证码为：</p>
         <div style="font-size: 32px; font-weight: bold; color: #4caf50; margin: 20px 0; text-align: center; letter-spacing: 5px;">
           ${code}
         </div>

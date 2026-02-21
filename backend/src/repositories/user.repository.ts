@@ -37,3 +37,11 @@ export const findUserByEmail = async (email: string) => {
     where: { email },
   });
 };
+
+// 更新用户密码
+export const updateUserPassword = async (email: string, password: string) => {
+  return await prisma.user.update({
+    where: { email },
+    data: { password },
+  });
+};

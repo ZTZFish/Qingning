@@ -12,6 +12,12 @@ const router = createRouter({
     {
       path: '/',
       redirect: '/login'
+    },
+    {
+      path: '/home',
+      name: 'home',
+      component: () => import('../views/Home.vue'),
+      meta: { title: '首页 - 青柠社团管理系统' }
     }
   ]
 })

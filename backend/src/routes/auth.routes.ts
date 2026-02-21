@@ -1,7 +1,11 @@
 // src/routes/auth.routes.ts
 
 import express from "express";
-import { login, sendVerificationCode } from "../controllers/user.controller";
+import {
+  login,
+  sendVerificationCode,
+  resetPassword,
+} from "../controllers/user.controller";
 
 const router = express.Router();
 
@@ -10,5 +14,8 @@ router.post("/code", sendVerificationCode);
 
 // POST /api/auth/login - 登录
 router.post("/login", login);
+
+// POST /api/auth/reset-password - 重置密码
+router.post("/reset-password", resetPassword);
 
 export default router;

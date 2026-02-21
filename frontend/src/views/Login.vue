@@ -3,11 +3,12 @@ import { ref, reactive, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Message, Message as MessageIcon, CircleCheck } from '@element-plus/icons-vue'
-import { login, register, sendCode } from '@/api/user'
+import { login, register, sendCode, resetPassword } from '@/api/user'
 import { Role } from '@/types'
 
 const router = useRouter()
 const isLogin = ref(true)
+const isForgotPassword = ref(false)
 const loading = ref(false)
 const codeLoading = ref(false)
 const countdown = ref(0)
@@ -28,6 +29,13 @@ const registerForm = reactive({
   role: Role.USER
 })
 
+const forgotPasswordForm = reactive({
+  email: '',
+  code: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
 const startCountdown = () => {
   countdown.value = 60
   timer = setInterval(() => {
@@ -42,20 +50,20 @@ onUnmounted(() => {
   if (timer) clearInterval(timer)
 })
 
-const handleSendCode = async () => {
-  if (!registerForm.email) {
+const handleSendCode = async (email: string, type: string) => {
+  if (!email) {
     ElMessage.warning('请先输入邮箱')
     return
   }
   const emailReg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
-  if (!emailReg.test(registerForm.email)) {
+  if (!emailReg.test(email)) {
     ElMessage.warning('请输入正确的邮箱格式')
     return
   }
 
   codeLoading.value = true
   try {
-    await sendCode(registerForm.email)
+    await sendCode(email)
     ElMessage.success('验证码已发送至您的邮箱')
     startCountdown()
   } catch (error: any) {
@@ -93,8 +101,8 @@ const handleLogin = async () => {
       // router.push('/leader/dashboard')
       ElMessage.info('社团负责人中心建设中...')
     } else {
-      // router.push('/home')
-      ElMessage.info('用户前台建设中...')
+      router.push('/home')
+      // ElMessage.info('用户前台建设中...')
     }
   } catch (error: any) {
     ElMessage.error(error.message || '登录失败')
@@ -128,8 +136,37 @@ const handleRegister = async () => {
   }
 }
 
+const handleResetPassword = async () => {
+  if (forgotPasswordForm.newPassword !== forgotPasswordForm.confirmPassword) {
+    ElMessage.error('两次输入的密码不一致')
+    return
+  }
+
+  loading.value = true
+  try {
+    await resetPassword({
+      email: forgotPasswordForm.email,
+      code: forgotPasswordForm.code,
+      newPassword: forgotPasswordForm.newPassword
+    })
+
+    ElMessage.success('密码重置成功，请登录')
+    isForgotPassword.value = false
+    isLogin.value = true
+  } catch (error: any) {
+    ElMessage.error(error.message || '重置失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 const toggleMode = () => {
   isLogin.value = !isLogin.value
+}
+
+const toggleForgotPassword = () => {
+  isForgotPassword.value = !isForgotPassword.value
+  isLogin.value = !isForgotPassword.value
 }
 </script>
 
@@ -137,16 +174,63 @@ const toggleMode = () => {
   <div class="auth-container">
     <div class="auth-card">
       <div class="auth-header">
-        <!-- <div class="logo-wrapper">
-          <img src="@/assets/logo.gif" alt="logo" class="logo" v-if="false" />
-          <div class="logo-text">青柠</div>
-        </div> -->
-        <div class="auth-title">{{ isLogin ? '欢迎回来' : '创建账号' }}</div>
+        <div class="auth-title">
+          {{ isForgotPassword ? '重置密码' : isLogin ? '欢迎回来' : '创建账号' }}
+        </div>
         <div class="auth-subtitle">Qingning Club Management System</div>
       </div>
 
+      <!-- 忘记密码表单 -->
+      <el-form v-if="isForgotPassword" :model="forgotPasswordForm" class="auth-form" @keyup.enter="handleResetPassword">
+        <el-form-item>
+          <el-input v-model="forgotPasswordForm.email" placeholder="邮箱" :prefix-icon="Message" />
+        </el-form-item>
+        <el-form-item class="code-item">
+          <div class="code-input-wrapper">
+            <el-input v-model="forgotPasswordForm.code" placeholder="验证码" :prefix-icon="CircleCheck" />
+            <el-button
+              class="send-code-link"
+              :disabled="countdown > 0 || codeLoading"
+              link
+              type="primary"
+              @click="handleSendCode(forgotPasswordForm.email, 'reset_password')"
+            >
+              {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
+        <el-form-item>
+          <el-input
+            v-model="forgotPasswordForm.newPassword"
+            type="password"
+            placeholder="新密码"
+            :prefix-icon="Lock"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-input
+            v-model="forgotPasswordForm.confirmPassword"
+            type="password"
+            placeholder="确认新密码"
+            :prefix-icon="Lock"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" class="submit-btn" :loading="loading" @click="handleResetPassword">
+            重置密码
+          </el-button>
+        </el-form-item>
+        <div class="auth-footer">
+          <el-link type="primary" :underline="false" @click="toggleForgotPassword">
+            返回登录
+          </el-link>
+        </div>
+      </el-form>
+
       <!-- 登录表单 -->
-      <el-form v-if="isLogin" :model="loginForm" class="auth-form" @keyup.enter="handleLogin">
+      <el-form v-else-if="isLogin" :model="loginForm" class="auth-form" @keyup.enter="handleLogin">
         <el-form-item>
           <el-input v-model="loginForm.username" placeholder="用户名" :prefix-icon="User" />
         </el-form-item>
@@ -158,6 +242,13 @@ const toggleMode = () => {
             :prefix-icon="Lock"
             show-password
           />
+        </el-form-item>
+        <el-form-item>
+          <div style="display: flex; justify-content: flex-end; width: 100%;">
+            <el-link type="primary" :underline="false" @click="toggleForgotPassword" style="font-size: 12px;">
+              忘记密码？
+            </el-link>
+          </div>
         </el-form-item>
         <el-form-item label="登录角色">
           <el-radio-group v-model="loginForm.role">
@@ -171,6 +262,12 @@ const toggleMode = () => {
             立即登录
           </el-button>
         </el-form-item>
+        <div class="auth-footer">
+          <span class="footer-text">还没有账号？</span>
+          <el-link type="primary" :underline="false" @click="toggleMode">
+            去注册
+          </el-link>
+        </div>
       </el-form>
 
       <!-- 注册表单 -->
@@ -189,7 +286,7 @@ const toggleMode = () => {
               :disabled="countdown > 0 || codeLoading"
               link
               type="primary"
-              @click="handleSendCode"
+              @click="handleSendCode(registerForm.email, 'register')"
             >
               {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
             </el-button>
@@ -218,14 +315,13 @@ const toggleMode = () => {
             立即注册
           </el-button>
         </el-form-item>
+        <div class="auth-footer">
+          <span class="footer-text">已有账号？</span>
+          <el-link type="primary" :underline="false" @click="toggleMode">
+            去登录
+          </el-link>
+        </div>
       </el-form>
-
-      <div class="auth-footer">
-        <span class="footer-text">{{ isLogin ? '还没有账号？' : '已有账号？' }}</span>
-        <el-link type="primary" :underline="false" @click="toggleMode">
-          {{ isLogin ? '去注册' : '去登录' }}
-        </el-link>
-      </div>
     
     </div>
   </div>
@@ -243,7 +339,7 @@ const toggleMode = () => {
   /* 固定距离顶部的距离 */
   padding-right: 12%;
   /* 距离右侧间距 */
-  background-image: url('/abc.png');
+  background-image: url('/logoBackground.png');
   background-size: cover;
   background-position: top left;
   /* 调整背景位置 */

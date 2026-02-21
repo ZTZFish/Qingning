@@ -1,91 +1,228 @@
 generator client {
   provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"   // 可选：自定义 Prisma Client 生成路径，避免污染 node_modules
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL")  // 数据库连接字符串，从 .env 文件读取
 }
 
+// ────────────────────────────────────────────────
+// 用户表 - 系统所有用户的核心身份信息
+// ────────────────────────────────────────────────
 model User {
-  id         Int              @id @default(autoincrement())
-  username   String           @unique
-  password   String           // 建议实际使用 bcrypt 等加密
-  email      String           @unique
-  role       Role             @default(USER)
-  ledClubs   Club[]           // 作为负责人的社团
-  activities UserActivity[]   // 参加的活动
+  id          Int       @id @default(autoincrement())          // 用户唯一ID，自增主键
+  username    String    @unique                                 // 用户名，全局唯一，用于登录和展示
+  password    String                                            // 密码（必须使用 bcrypt 等算法加密后存储，绝不存明文）
+  email       String    @unique                                 // 邮箱，全局唯一，可用于找回密码、通知等
+  avatar      String?                                           // 用户头像图片URL，可为空（null表示未设置）
+  role        Role      @default(USER)                          // 用户角色，默认普通用户
+
+  createdAt   DateTime  @default(now())                         // 账号创建时间，自动设置为记录插入时刻
+  updatedAt   DateTime  @updatedAt                               // 记录最后更新时间，自动更新
+  isDeleted   Boolean   @default(false)                         // 软删除标记，true表示已逻辑删除，不显示在列表中
+
+  // 关系字段
+  ledClubs          Club[]            // 该用户作为负责人的所有社团（一对多）
+  memberships       ClubMembership[]  // 该用户加入的所有社团（多对多关系，通过 ClubMembership 中间表）
+  participated      UserActivity[]    // 该用户报名的所有活动（多对多关系，通过 UserActivity 中间表）
+  // 新增：我发布的公告（一对多）
+  publishedAnnouncements Announcement[] @relation("AnnouncementAuthor")
 }
 
-model VerificationCode {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  code      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
+// ────────────────────────────────────────────────
+// 角色枚举 - 定义系统内三种主要身份
+// ────────────────────────────────────────────────
 enum Role {
-  ADMIN
-  LEADER
-  USER
+  ADMIN     // 超级管理员：拥有最高权限，可审批社团/活动、管理所有用户
+  LEADER    // 社团负责人：可管理自己负责的社团、发布活动、发布公告等
+  USER      // 普通用户：可浏览社团、报名活动、加入社团等
 }
 
+// ────────────────────────────────────────────────
+// 社团类型枚举 - 用于分类社团，避免字符串不规范
+// ────────────────────────────────────────────────
+enum ClubType {
+  ACADEMIC      // 学术类（如辩论、科研、学科竞赛）
+  SPORTS        // 体育类（如篮球、羽毛球、跑步）
+  ARTS          // 文艺类（如音乐、舞蹈、戏剧、摄影）
+  VOLUNTEER     // 志愿公益类
+  TECH          // 科技/IT类（如编程、AI、机器人）
+  ENTERTAINMENT // 娱乐兴趣类（如动漫、游戏、电影）
+  OTHER         // 其他未分类
+}
+
+// ────────────────────────────────────────────────
+// 社团表 - 存储所有社团的基本信息
+// ────────────────────────────────────────────────
 model Club {
-  id           Int           @id @default(autoincrement())
-  name         String        @unique
-  type         String        @default("未知")
-  description  String?       @db.Text
-  leaderId     Int
-  status       Status        @default(PENDING)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id            Int       @id @default(autoincrement())          // 社团唯一ID，自增主键
+  name          String    @unique                                 // 社团名称，全局唯一
+  type          ClubType  @default(OTHER)                         // 社团类型，使用枚举分类
+  description   String?   @db.Text                                // 社团详细介绍，长文本，可为空
+  coverImage    String?                                           // 社团封面图片URL或路径，可为空
+  leaderId      Int                                               // 社团负责人（外键，必须存在）
 
-  leader       User          @relation(fields: [leaderId], references: [id])
-  activities   Activity[]
-  announcements Announcement[]  // 新增：社团公告
+  status        Status    @default(PENDING)                       // 社团当前状态（待审批/通过/拒绝）
+  createdAt     DateTime  @default(now())                         // 社团创建时间
+  updatedAt     DateTime  @updatedAt                               // 最后修改时间
+  isDeleted     Boolean   @default(false)                         // 软删除标记
+
+  // 关系
+  leader        User              @relation(fields: [leaderId], references: [id], onDelete: Restrict)
+  // 社团负责人，用户删除时限制操作（防止误删导致社团无负责人）
+
+  members       ClubMembership[]  // 该社团的所有成员关系（多对多）
+  activities    Activity[]        // 该社团发布的所有活动（一对多）
+  announcements Announcement[]    // 该社团发布的所有公告（一对多）
+
+  @@index([leaderId])     // 加速按负责人查询社团
+  @@index([status])       // 加速按状态筛选社团（如待审批列表）
 }
 
+// ────────────────────────────────────────────────
+// 社团成员关系表（显式中间表） - 实现社团与用户的多对多关系
+// ────────────────────────────────────────────────
+model ClubMembership {
+  userId      Int                                               // 成员用户ID
+  clubId      Int                                               // 所属社团ID
+
+  joinedAt    DateTime          @default(now())                // 申请/加入时间
+  status      MembershipStatus  @default(PENDING)              // 成员状态（待审核/已通过/已退出等）
+  roleInClub  String?           @default("MEMBER")             // 在社团内的角色（如 MEMBER、VICE_LEADER、ADMIN等）
+  notes       String?           @db.VarChar(300)               // 加入申请时的备注或理由，长度限制
+
+  @@id([userId, clubId])   // 复合主键，防止同一用户重复加入同一社团
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club        Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId, status])   // 加速查询某个社团的某种状态成员（如待审核列表）
+  @@index([userId])           // 加速查询某用户加入的所有社团
+}
+
+// 社团成员状态枚举
+enum MembershipStatus {
+  PENDING    // 申请中，等待社团或管理员审核
+  APPROVED   // 已通过，成为正式成员
+  REJECTED   // 被拒绝
+  LEFT       // 用户主动退出或被移除
+}
+
+// ────────────────────────────────────────────────
+// 活动状态枚举 - 表示活动的生命周期
+// ────────────────────────────────────────────────
+enum ActivityStatus {
+  DRAFT       // 草稿状态，社团负责人创建但未提交审批
+  PENDING     // 已提交，等待管理员审批
+  APPROVED    // 审批通过，可对外展示和报名
+  REJECTED    // 审批拒绝
+  ONGOING     // 活动进行中
+  FINISHED    // 活动已结束
+  CANCELED    // 活动被取消
+}
+
+// ────────────────────────────────────────────────
+// 活动表 - 存储社团发布的各类活动
+// ────────────────────────────────────────────────
 model Activity {
-  id           Int              @id @default(autoincrement())
-  clubId       Int
-  name         String
-  description  String?          @db.Text
-  date         DateTime         // 活动开始时间（可自行修改默认值）
-  location     String?
-  status       Status           @default(PENDING)
-  createdAt    DateTime         @default(now())
-  endAt        DateTime           
+  id          Int             @id @default(autoincrement())      // 活动唯一ID
+  clubId      Int                                               // 所属社团ID
+  name        String                                            // 活动名称
+  description String?         @db.Text                          // 活动详细描述
+  coverImage  String?                                           // 活动封面图片URL或路径
+  date        DateTime                                          // 活动开始时间
+  endAt       DateTime                                          // 活动结束时间（业务层需校验 endAt > date）
+  location    String?                                           // 活动地点，可为空（线上活动可不填）
 
-  club         Club             @relation(fields: [clubId], references: [id])
-  participants UserActivity[]
+  status      ActivityStatus  @default(DRAFT)                   // 活动当前状态
+
+  createdAt   DateTime        @default(now())                   // 创建时间
+  updatedAt   DateTime        @updatedAt                        // 最后修改时间
+
+  // 关系
+  club          Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  // 社团删除时，级联删除其所有活动
+
+  participants  UserActivity[]    // 所有报名该活动的用户记录
+
+  @@index([clubId, status, date])   // 加速查询：某个社团的某种状态活动，并按时间排序
 }
 
-model Announcement {
-  id          Int      @id @default(autoincrement())
-  clubId      Int
-  title       String
-  content     String   @db.Text
-  pinned      Boolean  @default(false)  // 是否置顶
-  createdAt   DateTime @default(now())
-  club        Club     @relation(fields: [clubId], references: [id])
-}
-
+// ────────────────────────────────────────────────
+// 活动参与记录（报名表） - 记录用户对活动的报名情况
+// ────────────────────────────────────────────────
 model UserActivity {
-  userId     Int
-  activityId Int
-  joinedAt   DateTime @default(now())
-  notes      String? @db.Text
-  status     Status   @default(PENDING)  // 如 PENDING(报名待审), APPROVED(已参加)
+  userId      Int                                               // 报名用户ID
+  activityId  Int                                               // 报名活动ID
 
-  @@id([userId, activityId]) //复合主键
+  joinedAt    DateTime             @default(now())             // 报名时间
+  status      ParticipationStatus  @default(PENDING)           // 报名状态
+  notes       String?              @db.VarChar(500)            // 报名时填写的备注或理由，长度限制
 
-  user       User     @relation(fields: [userId], references: [id])
-  activity   Activity @relation(fields: [activityId], references: [id])
+  @@id([userId, activityId])   // 复合主键，防止重复报名
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity    Activity             @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId, status])   // 加速查询：某活动某种状态的报名者列表
 }
 
+// ────────────────────────────────────────────────
+// 活动参与/报名状态枚举
+// ────────────────────────────────────────────────
+enum ParticipationStatus {
+  PENDING    // 报名待审核（如果活动需要审核）
+  APPROVED   // 报名通过，可参加
+  REJECTED   // 报名被拒绝
+  ATTENDED   // 已参加（活动结束后可由负责人或系统标记）
+  CANCELED   // 用户主动取消报名
+}
+
+// ────────────────────────────────────────────────
+// 社团公告表 - 社团发布的通知、新闻等
+// ────────────────────────────────────────────────
+model Announcement {
+  id        Int      @id @default(autoincrement())              // 公告唯一ID
+  clubId    Int                                               // 所属社团ID
+  authorId  Int?                                              // 发布者ID（可选，方便追溯）
+  title     String                                            // 公告标题
+  content   String   @db.Text                                  // 公告正文（支持长文本）
+  pinned    Boolean  @default(false)                           // 是否置顶（置顶的显示在最前面）
+  createdAt DateTime @default(now())                           // 发布时间
+  updatedAt DateTime @updatedAt                                 // 最后编辑时间
+
+  // 关系
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  // 社团删除时，级联删除其公告
+
+  // 修改为双向关系
+  author    User?    @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  // 作者删除时，authorId 置空，不删除公告
+
+  @@index([clubId, pinned(sort: Desc), createdAt(sort: Desc)])  // 常用查询：按社团 + 置顶优先 + 最新排序
+}
+
+// ────────────────────────────────────────────────
+// 通用状态枚举 - 用于社团审批等场景
+// ────────────────────────────────────────────────
 enum Status {
-  PENDING
-  APPROVED
-  REJECTED
+  PENDING    // 待处理 / 待审批
+  APPROVED   // 已通过
+  REJECTED   // 已拒绝
+}
+
+// ────────────────────────────────────────────────
+// 验证码表 - 用于邮箱注册、找回密码等场景
+// ────────────────────────────────────────────────
+model VerificationCode {
+  id        Int      @id @default(autoincrement())              // 验证码记录ID
+  email     String   @unique                                         // 目标邮箱
+  code      String                                            // 验证码内容（通常6位数字或字母）
+  type      String   @default("register")                     // 验证码用途：register / reset_password / change_email 等
+  expiresAt DateTime                                          // 过期时间（建议设置5~15分钟）
+  createdAt DateTime @default(now())                           // 创建时间
+
+  @@index([email, expiresAt(sort: Desc)])   // 加速查询：查找某个邮箱最新的未过期验证码
 }

@@ -26,8 +26,9 @@ export function sendCode(email: string) {
 }
 
 /**
- * 示例：获取健康检查状态
+ * 重置密码
+ * @param data 重置密码信息
  */
-export function getHealth() {
-  return request.get("/health");
+export function resetPassword(data: any) {
+  return request.post("/auth/reset-password", data);
 }
