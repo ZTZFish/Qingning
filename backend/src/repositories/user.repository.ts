@@ -1,13 +1,17 @@
 // src/repositories/user.repository.ts
 
 import prisma from "../prisma/client"; // 导入 Prisma Client 单例，确保全局唯一实例，避免连接池问题
+import { Role, Sex } from "@prisma/client";
 
 // 创建新用户（注册时调用）
 export const createUser = async (
   username: string,
   email: string,
   password: string,
-  role: "ADMIN" | "LEADER" | "USER" = "USER"
+  role: Role = Role.USER,
+  realName: string = "",
+  sex: Sex = Sex.UNKNOWN,
+  StudentId: number
 ) => {
   // 使用 prisma.user.create 创建用户记录
   // data 对象包含所有要插入的字段：username、email、password（已加密）、role
@@ -17,6 +21,9 @@ export const createUser = async (
       email,
       password, // 这里传入的 password 应该是 bcrypt 加密后的
       role,
+      realName,
+      sex,
+      StudentId,
     },
   });
 };
@@ -30,7 +37,13 @@ export const findUserByUsername = async (username: string) => {
   });
 };
 
-// 根据 email 查找用户（可选，用于注册时检查 email 唯一性）
+// 根据学号查找用户（注册时检查学号唯一性）
+export const findUserByStudentId = async (StudentId: number) => {
+  return await prisma.user.findUnique({
+    where: { StudentId },
+  });
+};
+
 export const findUserByEmail = async (email: string) => {
   // 类似 findUserByUsername，但用 email 作为 where 条件
   return await prisma.user.findUnique({

@@ -2,11 +2,12 @@
 
 import bcrypt from "bcrypt"; // 导入 bcrypt 用于密码加密和比对
 import jwt from "jsonwebtoken"; // 导入 jsonwebtoken 用于生成 JWT token
-import { Role } from "@prisma/client";
+import { Role, Sex } from "@prisma/client";
 import {
   createUser,
   findUserByUsername,
   findUserByEmail,
+  findUserByStudentId,
   updateUserPassword,
   findUserById,
   updateUser,
@@ -33,7 +34,10 @@ export const registerUser = async (
   username: string,
   email: string,
   password: string,
-  code: string
+  code: string,
+  realName: string,
+  sex: Sex,
+  StudentId: number
 ) => {
   // 1. 验证验证码
   await verifyCode(email, code);
@@ -50,11 +54,25 @@ export const registerUser = async (
     throw new Error("该邮箱已被注册");
   }
 
+  // 检查 StudentId 是否已存在
+  const existingStudentId = await findUserByStudentId(StudentId);
+  if (existingStudentId) {
+    throw new Error("该学号已被注册");
+  }
+
   // 使用 bcrypt.hash 加密密码，SALT_ROUNDS 指定加密强度
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
   // 调用 repository 创建用户，传入加密后的密码
-  const newUser = await createUser(username, email, hashedPassword);
+  const newUser = await createUser(
+    username,
+    email,
+    hashedPassword,
+    Role.USER,
+    realName,
+    sex,
+    StudentId
+  );
 
   // 返回新用户（但不返回密码，安全考虑）
   return {
@@ -62,6 +80,9 @@ export const registerUser = async (
     username: newUser.username,
     email: newUser.email,
     role: newUser.role,
+    realName: newUser.realName,
+    sex: newUser.sex,
+    StudentId: newUser.StudentId,
   };
 };
 

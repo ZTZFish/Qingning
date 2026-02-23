@@ -2,9 +2,9 @@
 import { ref, reactive, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock, Message, Message as MessageIcon, CircleCheck } from '@element-plus/icons-vue'
+import { User, Lock, Message, Message as MessageIcon, CircleCheck, Male, Female, Postcard, Avatar } from '@element-plus/icons-vue'
 import { login, register, sendCode, resetPassword } from '@/api/user'
-import { Role } from '@/types'
+import { Role, Sex } from '@/types'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -28,7 +28,10 @@ const registerForm = reactive({
   password: '',
   confirmPassword: '',
   code: '',
-  role: Role.USER
+  role: Role.USER,
+  realName: '',
+  sex: Sex.MALE,
+  StudentId: ''
 })
 
 const forgotPasswordForm = reactive({
@@ -123,6 +126,18 @@ const handleRegister = async () => {
     ElMessage.error('两次输入的密码不一致')
     return
   }
+  if (!registerForm.realName) {
+    ElMessage.error('请输入真实姓名')
+    return
+  }
+  if (!registerForm.StudentId) {
+    ElMessage.error('请输入学号')
+    return
+  }
+  if (!/^\d{8}$/.test(registerForm.StudentId)) {
+    ElMessage.error('学号必须是8位数字')
+    return
+  }
 
   loading.value = true
   try {
@@ -131,7 +146,10 @@ const handleRegister = async () => {
       email: registerForm.email,
       password: registerForm.password,
       code: registerForm.code,
-      role: registerForm.role
+      role: registerForm.role,
+      realName: registerForm.realName,
+      sex: registerForm.sex,
+      StudentId: registerForm.StudentId
     })
 
     ElMessage.success('注册成功，请登录')
@@ -282,22 +300,26 @@ const toggleForgotPassword = () => {
         <el-form-item>
           <el-input v-model="registerForm.username" placeholder="用户名" :prefix-icon="User" />
         </el-form-item>
+        <div class="form-row">
+          <el-form-item class="half-item">
+            <el-input v-model="registerForm.realName" placeholder="真实姓名" :prefix-icon="Postcard" />
+          </el-form-item>
+          <el-form-item class="half-item">
+            <el-input v-model="registerForm.StudentId" placeholder="学号" :prefix-icon="Avatar" maxlength="8" />
+          </el-form-item>
+        </div>
+        <el-form-item label="性别" class="gender-item">
+          <el-radio-group v-model="registerForm.sex" class="gender-radio-group">
+            <el-radio :label="Sex.MALE">
+              <el-icon><Male /></el-icon> 男
+            </el-radio>
+            <el-radio :label="Sex.FEMALE">
+              <el-icon><Female /></el-icon> 女
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item>
           <el-input v-model="registerForm.email" placeholder="邮箱" :prefix-icon="Message" />
-        </el-form-item>
-        <el-form-item class="code-item">
-          <div class="code-input-wrapper">
-            <el-input v-model="registerForm.code" placeholder="验证码" :prefix-icon="CircleCheck" />
-            <el-button
-              class="send-code-link"
-              :disabled="countdown > 0 || codeLoading"
-              link
-              type="primary"
-              @click="handleSendCode(registerForm.email, 'register')"
-            >
-              {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-            </el-button>
-          </div>
         </el-form-item>
         <el-form-item>
           <el-input
@@ -316,6 +338,20 @@ const toggleForgotPassword = () => {
             :prefix-icon="Lock"
             show-password
           />
+        </el-form-item>
+        <el-form-item class="code-item">
+          <div class="code-input-wrapper">
+            <el-input v-model="registerForm.code" placeholder="验证码" :prefix-icon="CircleCheck" />
+            <el-button
+              class="send-code-link"
+              :disabled="countdown > 0 || codeLoading"
+              link
+              type="primary"
+              @click="handleSendCode(registerForm.email, 'register')"
+            >
+              {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+            </el-button>
+          </div>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="submit-btn" :loading="loading" @click="handleRegister">
@@ -342,7 +378,7 @@ const toggleForgotPassword = () => {
   /* 表单右对齐 */
   align-items: flex-start;
   /* 改为顶部对齐 */
-  padding-top: 12vh;
+  padding-top: 6vh;
   /* 固定距离顶部的距离 */
   padding-right: 12%;
   /* 距离右侧间距 */
@@ -361,7 +397,7 @@ const toggleForgotPassword = () => {
   border-radius: 12px;
   box-shadow: none !important;
   border: 1px solid #e0e0e0;
-  height: 45px;
+  height: 36px;
   transition: all 0.3s;
 }
 
@@ -371,11 +407,11 @@ const toggleForgotPassword = () => {
 }
 
 .auth-form :deep(.el-button--primary:not(.send-code-link)) {
-  height: 45px;
+  height: 38px;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 .code-input-wrapper {
@@ -412,7 +448,7 @@ const toggleForgotPassword = () => {
 
 .auth-card {
   width: 420px;
-  padding: 40px;
+  padding: 30px;
   background: rgba(255, 255, 255, 0.85);
   /* 增加一点透明度 */
   backdrop-filter: blur(15px);
@@ -432,7 +468,20 @@ const toggleForgotPassword = () => {
 
 .auth-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.half-item {
+  flex: 1;
+}
+
+.auth-form :deep(.el-form-item) {
+  margin-bottom: 16px;
 }
 
 .logo-wrapper {
@@ -465,11 +514,11 @@ const toggleForgotPassword = () => {
 }
 
 .auth-form {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 :deep(.el-input__wrapper) {
-  padding: 10px 15px;
+  padding: 5px 12px;
   border-radius: 10px;
   background-color: #f9f9f9;
   box-shadow: none !important;
@@ -485,11 +534,11 @@ const toggleForgotPassword = () => {
 
 .submit-btn {
   width: 100%;
-  height: 45px;
+  height: 38px;
   font-size: 16px;
   font-weight: 600;
   border-radius: 10px;
-  margin-top: 10px;
+  margin-top: 5px;
   letter-spacing: 2px;
 }
 
@@ -498,7 +547,7 @@ const toggleForgotPassword = () => {
   justify-content: center;
   align-items: center;
   text-align: center;
-  margin-top: 25px;
+  margin-top: 15px;
   font-size: 14px;
 }
 

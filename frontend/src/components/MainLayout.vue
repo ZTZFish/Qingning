@@ -35,15 +35,38 @@ watch(
     else if (path.includes('/activities')) activeMenu.value = 'activities'
     else if (path.includes('/my')) activeMenu.value = 'my'
     else if (path.includes('/messages')) activeMenu.value = 'messages'
+    else if (path.includes('/create-club')) activeMenu.value = 'create-club'
+    else activeMenu.value = ''
   },
   { immediate: true }
 )
 
 const handleMenuClick = (menu: string) => {
   activeMenu.value = menu
-  // Map menu to route if needed, for now just update active state
-  // In a real app, you would navigate here:
-  // router.push(`/${menu}`)
+  // Map menu to route if needed
+  switch (menu) {
+    case 'home':
+      router.push('/home')
+      break
+    case 'clubs':
+      router.push('/clubs')
+      break
+    case 'activities':
+      router.push('/activities')
+      break
+    case 'my':
+      router.push('/my')
+      break
+    case 'messages':
+      router.push('/messages')
+      break
+    case 'create-club':
+      // 暂时跳转到创建社团页面，后续根据需求调整
+      router.push('/create-club')
+      break
+    default:
+      break
+  }
 }
 
 const goToSettings = () => {

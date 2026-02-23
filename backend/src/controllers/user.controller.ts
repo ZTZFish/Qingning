@@ -10,7 +10,7 @@ import {
   updateUserEmail,
 } from "../services/user.service"; // 导入 service 函数
 import { sendCode } from "../services/verification.service";
-import { Role } from "@prisma/client";
+import { Role, Sex } from "@prisma/client";
 
 // 发送验证码控制器
 export const sendVerificationCode = async (req: Request, res: Response) => {
@@ -29,11 +29,29 @@ export const sendVerificationCode = async (req: Request, res: Response) => {
 // 注册控制器
 export const register = async (req: Request, res: Response) => {
   try {
-    // 从请求体中解构 username、email、password, code
-    const { username, email, password, code } = req.body;
+    // 从请求体中解构 username, email, password, code, realName, sex, StudentId
+    const { username, email, password, code, realName, sex, StudentId } = req.body;
+
+    // 简单校验
+    if (!realName) {
+      return res.status(400).json({ code: 400, message: "真实姓名不能为空" });
+    }
+    if (!sex || !Object.values(Sex).includes(sex)) {
+      return res.status(400).json({ code: 400, message: "性别无效" });
+    }
+    if (!StudentId) {
+      return res.status(400).json({ code: 400, message: "学号不能为空" });
+    }
+    // 验证学号格式：8位数字
+    if (!/^\d{8}$/.test(String(StudentId))) {
+      return res.status(400).json({ code: 400, message: "学号必须是8位数字" });
+    }
+
+    // 转换 StudentId 为数字 (如果前端传的是字符串)
+    const studentIdInt = parseInt(String(StudentId), 10);
 
     // 调用 service 注册用户
-    const newUser = await registerUser(username, email, password, code);
+    const newUser = await registerUser(username, email, password, code, realName, sex, studentIdInt);
 
     // 返回 201 成功响应，包含新用户数据
     res.status(201).json({

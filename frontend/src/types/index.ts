@@ -8,6 +8,15 @@ export enum Role {
 }
 
 /**
+ * 性别枚举
+ */
+export enum Sex {
+  UNKNOWN = "UNKNOWN",
+  MALE = "MALE",
+  FEMALE = "FEMALE",
+}
+
+/**
  * 状态枚举 (用于社团申请、活动申请等)
  */
 export enum Status {
@@ -38,6 +47,9 @@ export interface User {
   email: string;
   role: Role;
   avatar?: string | null;
+  realName?: string;
+  sex?: Sex;
+  StudentId?: number;
   // 关联字段 (可选，根据 API 返回情况使用)
   ledClubs?: Club[];
   activities?: UserActivity[];

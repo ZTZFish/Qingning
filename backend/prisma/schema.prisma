@@ -8,6 +8,14 @@ datasource db {
   url      = env("DATABASE_URL")  // 数据库连接字符串，从 .env 文件读取
 }
 
+
+// 性别枚举 - 枚举类型用于定义性别，避免字符串不规范
+enum Sex {
+  UNKNOWN  // 未知
+  MALE     // 男
+  FEMALE   // 女
+}
+
 // ────────────────────────────────────────────────
 // 用户表 - 系统所有用户的核心身份信息
 // ────────────────────────────────────────────────
@@ -18,6 +26,9 @@ model User {
   email       String    @unique                                 // 邮箱，全局唯一，可用于找回密码、通知等
   avatar      String?                                           // 用户头像图片URL，可为空（null表示未设置）
   role        Role      @default(USER)                          // 用户角色，默认普通用户
+  realName    String   @default("")                              // 真实姓名
+  sex         Sex      @default(UNKNOWN)                         // 性别
+  StudentId   Int      @unique                                   // 学号
 
   createdAt   DateTime  @default(now())                         // 账号创建时间，自动设置为记录插入时刻
   updatedAt   DateTime  @updatedAt                               // 记录最后更新时间，自动更新
