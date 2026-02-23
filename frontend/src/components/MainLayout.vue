@@ -72,6 +72,14 @@ const handleMenuClick = (menu: string) => {
 const goToSettings = () => {
   router.push('/settings')
 }
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
+
+const getAvatarUrl = (path?: string) => {
+  if (!path) return 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+  if (path.startsWith('http')) return path
+  return `${BASE_URL}${path}`
+}
 </script>
 
 <template>
@@ -134,7 +142,7 @@ const goToSettings = () => {
       </nav>
 
       <div class="user-profile">
-        <el-avatar :size="40" :src="userStore.user?.avatar || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'" />
+        <el-avatar :size="40" :src="getAvatarUrl(userStore.user?.avatar || undefined)" />
         <div class="user-info">
           <span class="username">{{ userStore.user?.username || '未登录' }}</span>
           <span class="role">{{ userStore.user?.role === 'ADMIN' ? '管理员' : userStore.user?.role === 'LEADER' ? '社团负责人' : '普通用户' }}</span>

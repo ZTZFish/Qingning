@@ -12,9 +12,18 @@
         <el-tab-pane label="基本信息" name="basic">
           <el-form :model="basicForm" label-width="80px">
             <el-form-item label="头像">
-               <div class="avatar-edit">
-                 <el-avatar :size="60" :src="basicForm.avatar || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'" />
-                 <el-input v-model="basicForm.avatar" placeholder="请输入头像链接" style="margin-top: 10px;" />
+               <div class="avatar-edit-container">
+                 <el-upload
+                   class="avatar-uploader"
+                   action="#"
+                   :show-file-list="false"
+                   :http-request="handleAvatarUpload"
+                   :before-upload="beforeAvatarUpload"
+                 >
+                   <img v-if="basicForm.avatar" :src="getAvatarUrl(basicForm.avatar)" class="avatar" />
+                   <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+                 </el-upload>
+                 <div class="avatar-tip">点击上传头像 (支持 jpg, png, gif)</div>
                </div>
             </el-form-item>
             <el-form-item label="用户名">
@@ -58,8 +67,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getUserInfo, updateUserInfo, updateUserEmail } from '@/api/user'
+import { getUserInfo, updateUserInfo, updateUserEmail, uploadAvatar } from '@/api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import type { User } from '@/types'
 
 const router = useRouter()
@@ -97,6 +107,43 @@ const fetchUser = async () => {
   }
 }
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
+
+const getAvatarUrl = (path: string) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `${BASE_URL}${path}`
+}
+
+const beforeAvatarUpload = (rawFile: any) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(rawFile.type)) {
+    ElMessage.error('Avatar picture must be JPG/PNG/GIF/WEBP format!')
+    return false
+  } else if (rawFile.size / 1024 / 1024 > 5) {
+    ElMessage.error('Avatar picture size can not exceed 5MB!')
+    return false
+  }
+  return true
+}
+
+const handleAvatarUpload = async (options: any) => {
+  const formData = new FormData()
+  formData.append('avatar', options.file)
+  try {
+    const res = await uploadAvatar(formData)
+    if (res && res.avatar) {
+      basicForm.value.avatar = res.avatar
+      if (currentUser.value) {
+        currentUser.value.avatar = res.avatar
+      }
+      ElMessage.success('头像上传成功')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '头像上传失败')
+  }
+}
+
 const handleUpdateProfile = async () => {
   try {
     await updateUserInfo(basicForm.value)
@@ -107,7 +154,7 @@ const handleUpdateProfile = async () => {
     // 这里暂时不做复杂处理，用户手动刷新后 MainLayout 会更新。
     // 为了更好的体验，我们可以 reload window
     setTimeout(() => {
-        window.location.reload()
+      window.location.reload()
     }, 500)
   } catch (error: any) {
     ElMessage.error(error.message || '更新失败')
@@ -118,7 +165,7 @@ const handleUpdateEmail = async () => {
   if (!emailForm.value.email || !emailForm.value.password) {
     return ElMessage.warning('请填写完整信息')
   }
-  
+
   try {
     await updateUserEmail(emailForm.value)
     ElMessage.success('邮箱更新成功')
@@ -153,14 +200,55 @@ onMounted(() => {
   max-width: 800px;
   margin: 0 auto;
 }
+
 .card-header {
   font-weight: bold;
 }
-.avatar-edit {
+
+.avatar-edit-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
+
+.avatar-uploader .avatar {
+  width: 100px;
+  height: 100px;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-uploader :deep(.el-upload) {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+
+.avatar-uploader :deep(.el-upload:hover) {
+  border-color: var(--el-color-primary);
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 100px;
+  height: 100px;
+  text-align: center;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatar-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
 .logout-area {
   margin-top: 40px;
   border-top: 1px solid #eee;

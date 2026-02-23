@@ -1,5 +1,5 @@
 // src/prisma/client.ts
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client/index.js";
 
 /**
  * 为了防止在开发环境下由于热重载（Hot Reloading）导致创建多个 PrismaClient 实例，

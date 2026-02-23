@@ -10,7 +10,7 @@ import {
   updateUserEmail,
 } from "../services/user.service"; // 导入 service 函数
 import { sendCode } from "../services/verification.service";
-import { Role, Sex } from "@prisma/client";
+import { Role, Sex } from "@prisma/client/index.js";
 
 // 发送验证码控制器
 export const sendVerificationCode = async (req: Request, res: Response) => {
@@ -30,7 +30,8 @@ export const sendVerificationCode = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   try {
     // 从请求体中解构 username, email, password, code, realName, sex, StudentId
-    const { username, email, password, code, realName, sex, StudentId } = req.body;
+    const { username, email, password, code, realName, sex, StudentId } =
+      req.body;
 
     // 简单校验
     if (!realName) {
@@ -51,7 +52,15 @@ export const register = async (req: Request, res: Response) => {
     const studentIdInt = parseInt(String(StudentId), 10);
 
     // 调用 service 注册用户
-    const newUser = await registerUser(username, email, password, code, realName, sex, studentIdInt);
+    const newUser = await registerUser(
+      username,
+      email,
+      password,
+      code,
+      realName,
+      sex,
+      studentIdInt
+    );
 
     // 返回 201 成功响应，包含新用户数据
     res.status(201).json({
@@ -62,6 +71,31 @@ export const register = async (req: Request, res: Response) => {
   } catch (error: any) {
     // 捕获错误，返回 400 错误响应
     res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
+// 上传头像控制器
+export const uploadAvatar = async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ code: 400, message: "请选择要上传的图片" });
+    }
+
+    const userId = (req as any).user.id;
+    // 构建相对路径 URL，前端需要拼接 Base URL (e.g. http://localhost:3000)
+    // 或者这里也可以返回完整 URL，取决于需求。这里返回相对路径更灵活。
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    // 更新用户数据库中的头像字段
+    await updateUserProfile(userId, { avatar: avatarUrl });
+
+    res.status(200).json({
+      code: 200,
+      message: "头像上传成功",
+      data: { avatar: avatarUrl },
+    });
+  } catch (error: any) {
+    res.status(500).json({ code: 500, message: error.message });
   }
 };
 

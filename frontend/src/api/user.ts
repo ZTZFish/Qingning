@@ -55,3 +55,15 @@ export function updateUserInfo(data: { username?: string; avatar?: string }) {
 export function updateUserEmail(data: { email: string; password: string }) {
   return request.put("/users/me/email", data);
 }
+
+/**
+ * 上传头像
+ * @param formData
+ */
+export function uploadAvatar(formData: FormData) {
+  return request.post<{ avatar: string }>("/users/me/avatar", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+}
