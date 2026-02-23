@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import {
   User,
-  Search,
-  Bell,
-  Setting,
-  ArrowRight,
   Monitor,
   Calendar,
   Location,
-  ChatDotRound
+  ChatDotRound,
+  ArrowRight
 } from '@element-plus/icons-vue'
 import ClubCard from '@/components/ClubCard.vue'
-import { type Club, Status, Role } from '@/types'
+import { type Club, Status, Role, ClubType } from '@/types'
 
 // 模拟数据
 const banners = [
@@ -63,6 +60,9 @@ const clubs: Club[] = [
     status: Status.APPROVED,
     createdAt: '2023-09-01T00:00:00.000Z',
     updatedAt: '2023-09-01T00:00:00.000Z',
+    type: ClubType.ARTS,
+    coverImage: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
+    _count: { members: 58 },
     leader: {
       id: 101,
       username: '张摄影',
@@ -78,6 +78,9 @@ const clubs: Club[] = [
     status: Status.APPROVED,
     createdAt: '2023-09-05T00:00:00.000Z',
     updatedAt: '2023-09-05T00:00:00.000Z',
+    type: ClubType.TECH,
+    coverImage: null,
+    _count: { members: 120 },
     leader: {
       id: 102,
       username: '李代码',
@@ -93,6 +96,9 @@ const clubs: Club[] = [
     status: Status.APPROVED,
     createdAt: '2023-09-10T00:00:00.000Z',
     updatedAt: '2023-09-10T00:00:00.000Z',
+    type: ClubType.SPORTS,
+    coverImage: 'https://images.unsplash.com/photo-1626224583764-84786c719794?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
+    _count: { members: 85 },
     leader: {
       id: 103,
       username: '王运动',
@@ -108,6 +114,9 @@ const clubs: Club[] = [
     status: Status.APPROVED,
     createdAt: '2023-09-15T00:00:00.000Z',
     updatedAt: '2023-09-15T00:00:00.000Z',
+    type: ClubType.ARTS,
+    coverImage: null,
+    _count: { members: 42 },
     leader: {
       id: 104,
       username: '赵戏剧',
@@ -117,336 +126,117 @@ const clubs: Club[] = [
   },
 ]
 
-const activeMenu = ref('home')
-const searchQuery = ref('')
-
 const handleClubClick = (club: any) => {
   console.log('Clicked club:', club)
 }
 </script>
 
 <template>
-  <div class="dashboard-container">
-    <!-- 侧边栏 -->
-    <aside class="sidebar">
-      <div class="logo-area">
-        <img src="/logo.png" alt="Logo" class="logo-img" />
-        <span class="logo-text">青柠社团</span>
-      </div>
-      
-      <nav class="nav-menu">
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'home' }"
-          @click="activeMenu = 'home'"
-        >
-          <el-icon><Monitor /></el-icon>
-          <span>首页概览</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'clubs' }"
-          @click="activeMenu = 'clubs'"
-        >
-          <el-icon><Search /></el-icon>
-          <span>发现社团</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'activities' }"
-          @click="activeMenu = 'activities'"
-        >
-          <el-icon><Calendar /></el-icon>
-          <span>社团活动</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'my' }"
-          @click="activeMenu = 'my'"
-        >
-          <el-icon><User /></el-icon>
-          <span>我的社团</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'messages' }"
-          @click="activeMenu = 'messages'"
-        >
-          <el-icon><ChatDotRound /></el-icon>
-          <span>消息通知</span>
-        </div>
-      </nav>
-
-      <div class="user-profile">
-        <el-avatar :size="40" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
-        <div class="user-info">
-          <span class="username">同学你好</span>
-          <span class="role">普通用户</span>
-        </div>
-        <el-icon class="settings-icon"><Setting /></el-icon>
-      </div>
-    </aside>
-
-    <!-- 主内容区 -->
-    <main class="main-content">
-      <!-- 顶部栏 -->
-      <header class="top-bar">
-        <div class="search-wrapper">
-          <el-input
-            v-model="searchQuery"
-            placeholder="搜索社团或活动..."
-            :prefix-icon="Search"
-            class="search-input"
-          />
-        </div>
-        <div class="actions">
-          <el-button circle>
-            <el-icon><Bell /></el-icon>
-          </el-button>
-        </div>
-      </header>
-
-      <div class="content-scroll">
-        <!-- 轮播图 -->
-        <div class="banner-section">
-          <el-carousel trigger="click" height="200px" :interval="5000" type="card">
-            <el-carousel-item v-for="item in banners" :key="item.id">
-              <div class="banner-card" :style="{ backgroundColor: item.color }">
-                <div class="banner-content">
-                  <h2>{{ item.title }}</h2>
-                  <p>{{ item.sub }}</p>
-                  <el-button type="primary" plain class="banner-btn">查看详情</el-button>
-                </div>
-                <div class="banner-decoration"></div>
-              </div>
-            </el-carousel-item>
-          </el-carousel>
-        </div>
-
-        <div class="grid-layout">
-          <!-- 左侧主要内容 -->
-          <div class="left-column">
-            <!-- 推荐社团 -->
-            <div class="section-header">
-              <h3>推荐社团</h3>
-              <el-button link>查看全部 <el-icon><ArrowRight /></el-icon></el-button>
+  <div class="home-container">
+    <!-- 轮播图 -->
+    <div class="banner-section">
+      <el-carousel trigger="click" :interval="5000" type="card">
+        <el-carousel-item v-for="item in banners" :key="item.id">
+          <div class="banner-card" :style="{ backgroundColor: item.color }">
+            <div class="banner-content">
+              <h2>{{ item.title }}</h2>
+              <p>{{ item.sub }}</p>
+              <el-button type="primary" plain class="banner-btn">查看详情</el-button>
             </div>
-            <div class="clubs-grid">
-              <div v-for="club in clubs" :key="club.id" class="club-wrapper">
-                <ClubCard :club="club" @click="handleClubClick" />
-              </div>
-            </div>
-
-            <!-- 最新活动 -->
-            <div class="section-header mt-8">
-              <h3>最新活动</h3>
-              <el-button link>更多活动 <el-icon><ArrowRight /></el-icon></el-button>
-            </div>
-            <div class="activities-scroll">
-              <div v-for="activity in activities" :key="activity.id" class="activity-card">
-                <div class="activity-image" :style="{ background: activity.image }">
-                  <span class="activity-tag">{{ activity.club }}</span>
-                </div>
-                <div class="activity-info">
-                  <h4>{{ activity.title }}</h4>
-                  <div class="info-row">
-                    <el-icon><Calendar /></el-icon> <span>{{ activity.date }}</span>
-                  </div>
-                  <div class="info-row">
-                    <el-icon><Location /></el-icon> <span>{{ activity.location }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div class="banner-decoration"></div>
           </div>
+        </el-carousel-item>
+      </el-carousel>
+    </div>
 
-          <!-- 右侧边栏 -->
-          <div class="right-column">
-            <!-- 公告栏 -->
-            <div class="widget-card">
-              <div class="widget-header">
-                <h3>公告通知</h3>
-              </div>
-              <div class="announcement-list">
-                <div v-for="item in announcements" :key="item.id" class="announcement-item">
-                  <div class="ann-tag">{{ item.tag }}</div>
-                  <div class="ann-content">
-                    <p class="ann-title">{{ item.title }}</p>
-                    <span class="ann-date">{{ item.date }}</span>
-                  </div>
-                </div>
-              </div>
+    <div class="grid-layout">
+      <!-- 左侧主要内容 -->
+      <div class="left-column">
+        <!-- 推荐社团 -->
+        <div class="section-header">
+          <h3>推荐社团</h3>
+          <el-button link>查看全部 <el-icon><ArrowRight /></el-icon></el-button>
+        </div>
+        <div class="clubs-grid">
+          <div v-for="club in clubs" :key="club.id" class="club-wrapper">
+            <ClubCard :club="club" @click="handleClubClick" />
+          </div>
+        </div>
+
+        <!-- 最新活动 -->
+        <div class="section-header mt-8">
+          <h3>最新活动</h3>
+          <el-button link>更多活动 <el-icon><ArrowRight /></el-icon></el-button>
+        </div>
+        <div class="activities-scroll">
+          <div v-for="activity in activities" :key="activity.id" class="activity-card">
+            <div class="activity-image" :style="{ background: activity.image }">
+              <span class="activity-tag">{{ activity.club }}</span>
             </div>
-
-            <!-- 快捷入口 -->
-            <div class="widget-card mt-6">
-              <div class="widget-header">
-                <h3>快捷入口</h3>
+            <div class="activity-info">
+              <h4>{{ activity.title }}</h4>
+              <div class="info-row">
+                <el-icon><Calendar /></el-icon> <span>{{ activity.date }}</span>
               </div>
-              <div class="quick-links">
-                <div class="quick-link-item">
-                  <div class="icon-box blue"><el-icon><Monitor /></el-icon></div>
-                  <span>活动签到</span>
-                </div>
-                <div class="quick-link-item">
-                  <div class="icon-box green"><el-icon><User /></el-icon></div>
-                  <span>加入申请</span>
-                </div>
-                <div class="quick-link-item">
-                  <div class="icon-box purple"><el-icon><ChatDotRound /></el-icon></div>
-                  <span>我的消息</span>
-                </div>
+              <div class="info-row">
+                <el-icon><Location /></el-icon> <span>{{ activity.location }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </main>
+
+      <!-- 右侧边栏 -->
+      <div class="right-column">
+        <!-- 公告栏 -->
+        <div class="widget-card">
+          <div class="widget-header">
+            <h3>公告通知</h3>
+          </div>
+          <div class="announcement-list">
+            <div v-for="item in announcements" :key="item.id" class="announcement-item">
+              <div class="ann-tag">{{ item.tag }}</div>
+              <div class="ann-content">
+                <p class="ann-title">{{ item.title }}</p>
+                <span class="ann-date">{{ item.date }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 快捷入口 -->
+        <div class="widget-card mt-6">
+          <div class="widget-header">
+            <h3>快捷入口</h3>
+          </div>
+          <div class="quick-links">
+            <div class="quick-link-item">
+              <div class="icon-box blue"><el-icon><Monitor /></el-icon></div>
+              <span>活动签到</span>
+            </div>
+            <div class="quick-link-item">
+              <div class="icon-box green"><el-icon><User /></el-icon></div>
+              <span>加入申请</span>
+            </div>
+            <div class="quick-link-item">
+              <div class="icon-box purple"><el-icon><ChatDotRound /></el-icon></div>
+              <span>我的消息</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.dashboard-container {
-  display: flex;
-  height: 100vh;
-  background-color: #f5f7fa;
-  font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Microsoft YaHei', Arial, sans-serif;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 260px;
-  background-color: #ffffff;
-  border-right: 1px solid #e6e6e6;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.logo-area {
-  height: 80px;
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  gap: 12px;
-}
-
-.logo-img {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
-
-.logo-text {
-  font-size: 20px;
-  font-weight: bold;
-  color: #00A69A;
-}
-
-.nav-menu {
-  flex: 1;
-  padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  color: #606266;
-  transition: all 0.3s;
-  font-weight: 500;
-}
-
-.nav-item .el-icon {
-  margin-right: 12px;
-  font-size: 20px;
-}
-
-.nav-item:hover {
-  background-color: #f0f9f8;
-  color: #00A69A;
-}
-
-.nav-item.active {
-  background-color: #e0f2f1;
-  color: #00A69A;
-}
-
-.user-profile {
-  padding: 24px;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.username {
-  font-size: 14px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.role {
-  font-size: 12px;
-  color: #909399;
-}
-
-.settings-icon {
-  color: #909399;
-  cursor: pointer;
-}
-
-/* Main Content */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.top-bar {
-  height: 64px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-}
-
-.search-input {
-  width: 300px;
-}
-
-.search-input :deep(.el-input__wrapper) {
-  border-radius: 20px;
-  background-color: #f5f7fa;
-  box-shadow: none;
-}
-
-.content-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 32px;
-}
-
 /* Banner */
 .banner-section {
   margin-bottom: 32px;
 }
 
 .banner-card {
+  box-sizing: border-box;
   height: 100%;
   border-radius: 16px;
   padding: 40px;
@@ -493,55 +283,56 @@ const handleClubClick = (club: any) => {
   font-size: 18px;
   font-weight: 600;
   color: #303133;
+  margin: 0;
+  border-left: 4px solid #00A69A;
+  padding-left: 12px;
 }
 
-/* Clubs Grid */
 .clubs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
 }
 
-.club-wrapper {
-  height: 280px;
+.mt-8 {
+  margin-top: 32px;
 }
 
-/* Activities */
 .activities-scroll {
   display: flex;
-  gap: 20px;
   overflow-x: auto;
-  padding-bottom: 12px;
+  gap: 16px;
+  padding-bottom: 16px;
 }
 
 .activity-card {
-  min-width: 200px;
+  flex: 0 0 240px;
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #f0f0f0;
-  transition: all 0.3s;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
   cursor: pointer;
+  transition: all 0.3s;
 }
 
 .activity-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .activity-image {
-  height: 100px;
+  height: 120px;
   position: relative;
 }
 
 .activity-tag {
   position: absolute;
   top: 8px;
-  left: 8px;
-  background: rgba(0, 0, 0, 0.5);
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  font-size: 10px;
-  padding: 2px 6px;
+  font-size: 12px;
+  padding: 2px 8px;
   border-radius: 4px;
 }
 
@@ -550,8 +341,8 @@ const handleClubClick = (club: any) => {
 }
 
 .activity-info h4 {
-  margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 16px;
+  margin: 0 0 8px 0;
   color: #303133;
 }
 
@@ -564,19 +355,23 @@ const handleClubClick = (club: any) => {
   margin-bottom: 4px;
 }
 
-/* Right Column Widgets */
+/* Widget Card */
 .widget-card {
   background: #fff;
   border-radius: 16px;
   padding: 20px;
-  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+.widget-header {
+  margin-bottom: 16px;
 }
 
 .widget-header h3 {
   font-size: 16px;
   font-weight: 600;
   color: #303133;
-  margin-bottom: 16px;
+  margin: 0;
 }
 
 .announcement-item {
@@ -593,9 +388,9 @@ const handleClubClick = (club: any) => {
 .ann-tag {
   background: #e0f2f1;
   color: #00A69A;
-  padding: 2px 8px;
-  border-radius: 4px;
   font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
   height: fit-content;
 }
 
@@ -606,20 +401,27 @@ const handleClubClick = (club: any) => {
 .ann-title {
   font-size: 14px;
   color: #606266;
-  margin-bottom: 4px;
+  margin: 0 0 4px 0;
   line-height: 1.4;
+  cursor: pointer;
+}
+
+.ann-title:hover {
+  color: #00A69A;
 }
 
 .ann-date {
   font-size: 12px;
-  color: #909399;
+  color: #999;
 }
 
-/* Quick Links */
+.mt-6 {
+  margin-top: 24px;
+}
+
 .quick-links {
   display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
+  justify-content: space-between;
 }
 
 .quick-link-item {
@@ -633,7 +435,7 @@ const handleClubClick = (club: any) => {
 .icon-box {
   width: 48px;
   height: 48px;
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -641,42 +443,27 @@ const handleClubClick = (club: any) => {
   transition: all 0.3s;
 }
 
-.quick-link-item:hover .icon-box {
-  transform: scale(1.1);
-}
-
 .icon-box.blue {
   background: #ecf5ff;
-  color: #409EFF;
+  color: #409eff;
 }
 
 .icon-box.green {
   background: #f0f9eb;
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .icon-box.purple {
-  background: #f4ecf8;
-  color: #b37feb;
+  background: #f4f4f5;
+  color: #909399;
+}
+
+.quick-link-item:hover .icon-box {
+  transform: scale(1.1);
 }
 
 .quick-link-item span {
   font-size: 12px;
   color: #606266;
-}
-
-.mt-6 {
-  margin-top: 24px;
-}
-
-.mt-8 {
-  margin-top: 32px;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .grid-layout {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

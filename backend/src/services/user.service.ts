@@ -8,6 +8,8 @@ import {
   findUserByUsername,
   findUserByEmail,
   updateUserPassword,
+  findUserById,
+  updateUser,
 } from "../repositories/user.repository"; // 导入 repository 函数
 import { verifyCode } from "./verification.service";
 
@@ -127,4 +129,63 @@ export const resetPassword = async (
   await updateUserPassword(email, hashedPassword);
 
   return true;
+};
+
+// 获取用户个人资料服务
+export const getUserProfile = async (userId: number) => {
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new Error("用户不存在");
+  }
+
+  // 返回用户信息（排除敏感字段如密码）
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar,
+  };
+};
+
+// 更新用户个人资料
+export const updateUserProfile = async (
+  userId: number,
+  data: { username?: string; avatar?: string }
+) => {
+  if (data.username) {
+    const existingUser = await findUserByUsername(data.username);
+    if (existingUser && existingUser.id !== userId) {
+      throw new Error("用户名已存在");
+    }
+  }
+
+  return await updateUser(userId, data);
+};
+
+// 更新用户邮箱
+export const updateUserEmail = async (
+  userId: number,
+  newEmail: string,
+  password: string
+) => {
+  // 1. 验证密码
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new Error("用户不存在");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("密码错误");
+  }
+
+  // 2. 检查邮箱是否已被使用
+  const existingEmail = await findUserByEmail(newEmail);
+  if (existingEmail && existingEmail.id !== userId) {
+    throw new Error("该邮箱已被注册");
+  }
+
+  // 3. 更新邮箱
+  return await updateUser(userId, { email: newEmail });
 };

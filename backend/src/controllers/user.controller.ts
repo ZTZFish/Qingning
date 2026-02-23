@@ -5,6 +5,9 @@ import {
   registerUser,
   loginUser,
   resetPassword as resetPasswordService,
+  getUserProfile,
+  updateUserProfile,
+  updateUserEmail,
 } from "../services/user.service"; // 导入 service 函数
 import { sendCode } from "../services/verification.service";
 import { Role } from "@prisma/client";
@@ -77,6 +80,55 @@ export const resetPassword = async (req: Request, res: Response) => {
     const { email, code, newPassword } = req.body;
     await resetPasswordService(email, code, newPassword);
     res.status(200).json({ code: 200, message: "密码重置成功" });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
+// 获取用户资料控制器
+export const getProfile = async (req: Request, res: Response) => {
+  try {
+    // 从 req.user 中获取 userId（由 authenticateJWT 中间件设置）
+    const userId = (req as any).user.id;
+    const user = await getUserProfile(userId);
+    res.status(200).json({
+      code: 200,
+      message: "获取成功",
+      data: user,
+    });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
+// 更新用户资料控制器
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { username, avatar } = req.body;
+    await updateUserProfile(userId, { username, avatar });
+    res.status(200).json({
+      code: 200,
+      message: "更新成功",
+    });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
+// 更新用户邮箱控制器
+export const updateEmail = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ code: 400, message: "参数不完整" });
+    }
+    await updateUserEmail(userId, email, password);
+    res.status(200).json({
+      code: 200,
+      message: "邮箱更新成功",
+    });
   } catch (error: any) {
     res.status(400).json({ code: 400, message: error.message });
   }

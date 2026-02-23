@@ -5,8 +5,10 @@ import { ElMessage } from 'element-plus'
 import { User, Lock, Message, Message as MessageIcon, CircleCheck } from '@element-plus/icons-vue'
 import { login, register, sendCode, resetPassword } from '@/api/user'
 import { Role } from '@/types'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 const isLogin = ref(true)
 const isForgotPassword = ref(false)
 const loading = ref(false)
@@ -88,7 +90,10 @@ const handleLogin = async () => {
     })
 
     // 保存 token 和用户信息
-    localStorage.setItem('token', res.token)
+    userStore.setToken(res.token)
+    userStore.user = res.user // 直接更新 store 中的用户信息，避免跳转后再次请求
+    // 为了兼容可能还在使用 localStorage.getItem('user') 的代码（如果有），也可以保留下面这行，
+    // 但建议逐步迁移到使用 userStore
     localStorage.setItem('user', JSON.stringify(res.user))
 
     ElMessage.success('登录成功')
@@ -96,13 +101,15 @@ const handleLogin = async () => {
     // 根据角色跳转不同页面 (此处先预留跳转逻辑)
     if (res.user.role === Role.ADMIN) {
       // router.push('/admin/dashboard')
-      ElMessage.info('管理员后台建设中...')
+      // ElMessage.info('管理员后台建设中...')
+      // 暂时都跳转到首页
+      router.push('/home')
     } else if (res.user.role === Role.LEADER) {
       // router.push('/leader/dashboard')
-      ElMessage.info('社团负责人中心建设中...')
+      // ElMessage.info('社团负责人中心建设中...')
+      router.push('/home')
     } else {
       router.push('/home')
-      // ElMessage.info('用户前台建设中...')
     }
   } catch (error: any) {
     ElMessage.error(error.message || '登录失败')

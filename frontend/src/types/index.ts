@@ -17,6 +17,19 @@ export enum Status {
 }
 
 /**
+ * 社团类型枚举
+ */
+export enum ClubType {
+  ACADEMIC = "ACADEMIC",
+  SPORTS = "SPORTS",
+  ARTS = "ARTS",
+  VOLUNTEER = "VOLUNTEER",
+  TECH = "TECH",
+  ENTERTAINMENT = "ENTERTAINMENT",
+  OTHER = "OTHER",
+}
+
+/**
  * 用户接口
  */
 export interface User {
@@ -24,6 +37,7 @@ export interface User {
   username: string;
   email: string;
   role: Role;
+  avatar?: string | null;
   // 关联字段 (可选，根据 API 返回情况使用)
   ledClubs?: Club[];
   activities?: UserActivity[];
@@ -36,6 +50,8 @@ export interface Club {
   id: number;
   name: string;
   description: string | null;
+  coverImage?: string | null; // 社团封面
+  type?: ClubType; // 社团类型
   leaderId: number;
   status: Status;
   createdAt: string; // ISO 8601 字符串
@@ -44,6 +60,9 @@ export interface Club {
   leader?: User;
   activities?: Activity[];
   announcements?: Announcement[];
+  _count?: {
+    members: number; // 成员数量
+  };
 }
 
 /**
@@ -107,4 +126,3 @@ export interface LoginResponse {
   token: string;
   user: User;
 }
-

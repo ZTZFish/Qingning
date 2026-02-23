@@ -32,3 +32,26 @@ export function sendCode(email: string) {
 export function resetPassword(data: any) {
   return request.post("/auth/reset-password", data);
 }
+
+/**
+ * 获取当前用户信息
+ */
+export function getUserInfo() {
+  return request.get<User>("/users/me");
+}
+
+/**
+ * 更新用户信息
+ * @param data { username?: string; avatar?: string }
+ */
+export function updateUserInfo(data: { username?: string; avatar?: string }) {
+  return request.put("/users/me", data);
+}
+
+/**
+ * 更新用户邮箱
+ * @param data { email: string; password: string }
+ */
+export function updateUserEmail(data: { email: string; password: string }) {
+  return request.put("/users/me/email", data);
+}

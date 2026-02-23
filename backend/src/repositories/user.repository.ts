@@ -45,3 +45,21 @@ export const updateUserPassword = async (email: string, password: string) => {
     data: { password },
   });
 };
+
+// 根据 ID 查找用户
+export const findUserById = async (id: number) => {
+  return await prisma.user.findUnique({
+    where: { id },
+  });
+};
+
+// 更新用户信息
+export const updateUser = async (
+  id: number,
+  data: { username?: string; avatar?: string; email?: string }
+) => {
+  return await prisma.user.update({
+    where: { id },
+    data,
+  });
+};
