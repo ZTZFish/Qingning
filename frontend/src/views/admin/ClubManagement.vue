@@ -2,9 +2,9 @@
   <div class="club-management">
     <CommonList
       title="社团管理"
-      :data="clubs"
+      :data="filteredClubs"
       :columns="columns"
-      :total="clubs.length"
+      :total="filteredClubs.length"
       action-width="250"
     >
       <template #header-actions>
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import CommonList from '@/components/CommonList.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
@@ -72,10 +72,12 @@ const columns: Column[] = [
 // 模拟数据
 const clubs = ref<any[]>([
   { id: 1, name: '青柠编程社', type: ClubType.TECH, leader: { realName: '张三' }, status: Status.APPROVED, createdAt: '2023-09-01', coverImage: '' },
-  { id: 2, name: '青柠羽毛球社', type: ClubType.SPORTS, leader: { realName: '李四' }, status: Status.APPROVED, createdAt: '2023-09-10', coverImage: '' },
-  { id: 3, name: '青柠摄影社', type: ClubType.ARTS, leader: { realName: '王五' }, status: Status.PENDING, createdAt: '2023-10-01', coverImage: '' },
-  { id: 4, name: '青柠学术社', type: ClubType.ACADEMIC, leader: { realName: '赵六' }, status: Status.REJECTED, createdAt: '2023-09-15', coverImage: '' }
+  { id: 2, name: '青柠羽毛球社', type: ClubType.SPORTS, leader: { realName: '李四' }, status: Status.APPROVED, createdAt: '2023-09-10', coverImage: '' }
 ])
+
+const filteredClubs = computed(() => {
+  return clubs.value.filter(club => club.status !== Status.PENDING)
+})
 
 const handleApprove = (row: any) => {
   ElMessageBox.confirm(`确定要通过社团 ${row.name} 的创建申请吗？`, '审批提示', {

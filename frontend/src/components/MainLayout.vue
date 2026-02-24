@@ -13,7 +13,8 @@ import {
   Plus,
   UserFilled,
   Management,
-  List
+  List,
+  CircleCheck
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -40,15 +41,16 @@ const menuItems = computed(() => {
     items.push(
       { id: 'user-manage', label: '用户管理', icon: UserFilled, path: '/admin/users' },
       { id: 'club-manage', label: '社团管理', icon: Management, path: '/admin/clubs' },
-      { id: 'activity-manage', label: '活动管理', icon: List, path: '/admin/activities' }
+      { id: 'activity-manage', label: '活动管理', icon: List, path: '/admin/activities' },
+      { id: 'content-audit', label: '内容审批', icon: CircleCheck, path: '/admin/audit' }
     )
   } else if (role === 'LEADER') {
     // 负责人菜单
     items.push(
-      { id: 'clubs', label: '发现社团', icon: Search, path: '/clubs' },
+      { id: 'club-manage', label: '社团管理', icon: Management, path: '/leader/club' },
       { id: 'activity-manage', label: '活动管理', icon: List, path: '/leader/activities' },
       { id: 'my', label: '我的社团', icon: User, path: '/my' },
-      { id: 'create-club', label: '创建社团', icon: Plus, path: '/create-club' }
+      { id: 'add-activity', label: '添加活动', icon: Plus, path: '/leader/add-activity' },
     )
   } else {
     // 普通用户菜单

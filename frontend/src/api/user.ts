@@ -67,3 +67,22 @@ export function uploadAvatar(formData: FormData) {
     },
   });
 }
+
+/**
+ * 管理员获取所有用户列表
+ */
+export function getAllUsers() {
+  return request.get<User[]>("/users");
+}
+
+/**
+ * 管理员更新用户信息
+ * @param userId 用户ID
+ * @param data 更新内容
+ */
+export function adminUpdateUser(
+  userId: number,
+  data: { role?: string; isDeleted?: boolean }
+) {
+  return request.put(`/users/${userId}/admin`, data);
+}

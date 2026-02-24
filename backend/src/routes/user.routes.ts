@@ -7,11 +7,25 @@ import {
   updateProfile,
   updateEmail,
   uploadAvatar,
+  getAllUsers,
+  adminUpdateUserInfo,
 } from "../controllers/user.controller";
-import { authenticateJWT } from "../middlewares/auth.middleware";
+import { authenticateJWT, checkRole } from "../middlewares/auth.middleware";
 import { createUploadMiddleware } from "../middlewares/upload.middleware";
+import { Role } from "@prisma/client/index.js";
 
 const router = express.Router();
+
+// 管理员专用：获取所有用户
+router.get("/", authenticateJWT, checkRole([Role.ADMIN]), getAllUsers);
+
+// 管理员专用：更新用户信息
+router.put(
+  "/:userId/admin",
+  authenticateJWT,
+  checkRole([Role.ADMIN]),
+  adminUpdateUserInfo
+);
 
 // POST /api/users - 注册（创建用户资源）
 router.post("/", register);

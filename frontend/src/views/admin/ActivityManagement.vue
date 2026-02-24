@@ -2,9 +2,9 @@
   <div class="activity-management">
     <CommonList
       title="活动管理"
-      :data="activities"
+      :data="filteredActivities"
       :columns="columns"
-      :total="activities.length"
+      :total="filteredActivities.length"
       action-width="300"
     >
       <template #header-actions>
@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import CommonList from '@/components/CommonList.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
@@ -75,10 +75,12 @@ const columns: Column[] = [
 // 模拟数据
 const activities = ref<any[]>([
   { id: 1, name: '青柠编程大赛', club: { name: '青柠编程社' }, date: '2023-11-15 14:00', endAt: '2023-11-15 18:00', status: ActivityStatus.APPROVED, coverImage: '' },
-  { id: 2, name: '青柠杯羽毛球赛', club: { name: '青柠羽毛球社' }, date: '2023-11-20 09:00', endAt: '2023-11-20 17:00', status: ActivityStatus.ONGOING, coverImage: '' },
-  { id: 3, name: '青柠摄影作品展', club: { name: '青柠摄影社' }, date: '2023-11-25 10:00', endAt: '2023-11-25 18:00', status: ActivityStatus.PENDING, coverImage: '' },
-  { id: 4, name: '青柠学术研讨会', club: { name: '青柠学术社' }, date: '2023-11-01 14:00', endAt: '2023-11-01 16:00', status: ActivityStatus.FINISHED, coverImage: '' }
+  { id: 2, name: '青柠杯羽毛球赛', club: { name: '青柠羽毛球社' }, date: '2023-11-20 09:00', endAt: '2023-11-20 17:00', status: ActivityStatus.ONGOING, coverImage: '' }
 ])
+
+const filteredActivities = computed(() => {
+  return activities.value.filter(activity => activity.status !== ActivityStatus.PENDING)
+})
 
 const handlePublish = () => {
   ElMessage.info('前往发布活动页面')

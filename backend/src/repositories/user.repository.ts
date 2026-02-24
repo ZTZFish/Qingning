@@ -66,10 +66,34 @@ export const findUserById = async (id: number) => {
   });
 };
 
+// 获取所有用户（包括已封禁）
+export const findAllUsers = async () => {
+  return await prisma.user.findMany({
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      avatar: true,
+      role: true,
+      realName: true,
+      sex: true,
+      StudentId: true,
+      isDeleted: true,
+      createdAt: true,
+    },
+  });
+};
+
 // 更新用户信息
 export const updateUser = async (
   id: number,
-  data: { username?: string; avatar?: string; email?: string }
+  data: {
+    username?: string;
+    avatar?: string;
+    email?: string;
+    role?: Role;
+    isDeleted?: boolean;
+  }
 ) => {
   return await prisma.user.update({
     where: { id },

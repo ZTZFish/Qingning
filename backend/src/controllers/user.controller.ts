@@ -8,6 +8,8 @@ import {
   getUserProfile,
   updateUserProfile,
   updateUserEmail,
+  getAllUserList,
+  adminUpdateUser,
 } from "../services/user.service"; // 导入 service 函数
 import { sendCode } from "../services/verification.service";
 import { Role, Sex } from "@prisma/client/index.js";
@@ -137,16 +139,63 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
+// 获取所有用户列表（管理员专用）
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await getAllUserList();
+    res.status(200).json({
+      code: 200,
+      message: "获取成功",
+      data: users,
+    });
+  } catch (error: any) {
+    res.status(500).json({ code: 500, message: error.message });
+  }
+};
+
+// 管理员更新用户信息
+export const adminUpdateUserInfo = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { role, isDeleted } = req.body;
+
+    const targetUserId = parseInt(userId, 10);
+    const currentUserId = (req as any).user.id;
+
+    // 防止管理员删除自己
+    if (currentUserId === targetUserId && isDeleted === true) {
+      return res.status(400).json({ code: 400, message: "不能删除自己" });
+    }
+
+    await adminUpdateUser(targetUserId, { role, isDeleted });
+    res.status(200).json({
+      code: 200,
+      message: "更新成功",
+    });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
 // 获取用户资料控制器
 export const getProfile = async (req: Request, res: Response) => {
   try {
     // 从 req.user 中获取 userId（由 authenticateJWT 中间件设置）
     const userId = (req as any).user.id;
+    const sessionRole = (req as any).user.role; // 获取登录时选择的会话角色
+
     const user = await getUserProfile(userId);
+
+    // 将数据库中的角色替换为会话角色，确保前端菜单与登录身份一致
+    const userWithSessionRole = {
+      ...user,
+      role: sessionRole,
+    };
+
     res.status(200).json({
       code: 200,
       message: "获取成功",
-      data: user,
+      data: userWithSessionRole,
     });
   } catch (error: any) {
     res.status(400).json({ code: 400, message: error.message });

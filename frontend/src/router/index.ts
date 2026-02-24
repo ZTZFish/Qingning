@@ -49,7 +49,26 @@ const router = createRouter({
           component: () => import("../views/admin/ActivityManagement.vue"),
           meta: { roles: [Role.ADMIN], title: "活动管理 - 青柠社团管理系统" }
         },
+        {
+          path: "admin/audit",
+          name: "admin-audit",
+          component: () => import("../views/admin/ContentAudit.vue"),
+          meta: { roles: [Role.ADMIN], title: "内容审批 - 青柠社团管理系统" }
+        },
+        // 普通用户专用路由
+        {
+          path: "create-club",
+          name: "create-club",
+          component: () => import("../views/user/CreateClub.vue"),
+          meta: { roles: [Role.USER], title: "申请创建社团 - 青柠社团管理系统" }
+        },
         // 负责人专用路由
+        {
+          path: "leader/club",
+          name: "leader-club",
+          component: () => import("../views/admin/ClubManagement.vue"),
+          meta: { roles: [Role.LEADER], title: "社团管理 - 青柠社团管理系统" }
+        },
         {
           path: "leader/activities",
           name: "leader-activities",

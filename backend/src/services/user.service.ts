@@ -11,6 +11,7 @@ import {
   updateUserPassword,
   findUserById,
   updateUser,
+  findAllUsers,
 } from "../repositories/user.repository"; // 导入 repository 函数
 import { verifyCode } from "./verification.service";
 
@@ -99,8 +100,25 @@ export const loginUser = async (
   }
 
   // 验证用户角色
-  if (user.role !== role) {
-    throw new Error(`您不是${getRoleName(role)}，请检查登录身份`);
+  // 逻辑修改：
+  // 1. 如果请求身份是 ADMIN，则数据库必须是 ADMIN
+  // 2. 如果请求身份是 LEADER，则数据库必须是 LEADER
+  // 3. 如果请求身份是 USER，则数据库可以是 USER 或 LEADER (负责人可以降级以普通用户身份登录)
+  const dbRole = user.role;
+  const targetRole = role;
+
+  let hasPermission = false;
+  if (targetRole === Role.ADMIN) {
+    hasPermission = dbRole === Role.ADMIN;
+  } else if (targetRole === Role.LEADER) {
+    hasPermission = dbRole === Role.LEADER;
+  } else if (targetRole === Role.USER) {
+    // 负责人 (LEADER) 也可以作为普通用户 (USER) 登录
+    hasPermission = dbRole === Role.USER || dbRole === Role.LEADER;
+  }
+
+  if (!hasPermission) {
+    throw new Error(`您不是${getRoleName(targetRole)}，请检查登录身份`);
   }
 
   // 使用 bcrypt.compare 比对输入密码和数据库加密密码
@@ -109,21 +127,21 @@ export const loginUser = async (
     throw new Error("用户名或密码错误");
   }
 
-  // 生成 JWT token：payload 包含用户 id 和 role，签名用 .env 中的 JWT_SECRET，过期时间 1 小时
+  // 生成 JWT token：payload 包含用户 id 和本次登录选用的 role
   const token = jwt.sign(
-    { userId: user.id, role: user.role },
+    { userId: user.id, role: targetRole },
     process.env.JWT_SECRET as string,
-    { expiresIn: "1h" } // token 有效期，可调整
+    { expiresIn: "1h" }
   );
 
-  // 返回 token 和用户基本信息
+  // 返回 token 和用户基本信息（role 字段返回本次登录选用的角色）
   return {
     token,
     user: {
       id: user.id,
       username: user.username,
       email: user.email,
-      role: user.role,
+      role: targetRole,
     },
   };
 };
@@ -212,4 +230,25 @@ export const updateUserEmail = async (
 
   // 3. 更新邮箱
   return await updateUser(userId, { email: newEmail });
+};
+
+// 获取所有用户列表（管理员专用）
+export const getAllUserList = async () => {
+  return await findAllUsers();
+};
+
+// 更新用户权限或状态（管理员专用）
+export const adminUpdateUser = async (
+  userId: number,
+  data: { role?: Role; isDeleted?: boolean }
+) => {
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new Error("用户不存在");
+  }
+
+  // 不允许管理员对自己进行某些操作，比如删除自己
+  // 这个逻辑可以在 controller 层根据 req.user.id 处理
+
+  return await updateUser(userId, data);
 };
