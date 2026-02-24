@@ -30,12 +30,32 @@ const router = createRouter({
           component: () => import("../views/UserSettings.vue"),
           meta: { title: "个人设置 - 青柠社团管理系统" },
         },
-        // 示例：添加需要特定权限的路由（目前没有，仅作演示或未来扩展）
-        // {
-        //   path: "admin",
-        //   component: () => import("../views/Admin.vue"),
-        //   meta: { roles: [Role.ADMIN], title: "管理员控制台" }
-        // }
+        // 管理员专用路由
+        {
+          path: "admin/users",
+          name: "admin-users",
+          component: () => import("../views/admin/UserManagement.vue"),
+          meta: { roles: [Role.ADMIN], title: "用户管理 - 青柠社团管理系统" }
+        },
+        {
+          path: "admin/clubs",
+          name: "admin-clubs",
+          component: () => import("../views/admin/ClubManagement.vue"),
+          meta: { roles: [Role.ADMIN], title: "社团管理 - 青柠社团管理系统" }
+        },
+        {
+          path: "admin/activities",
+          name: "admin-activities",
+          component: () => import("../views/admin/ActivityManagement.vue"),
+          meta: { roles: [Role.ADMIN], title: "活动管理 - 青柠社团管理系统" }
+        },
+        // 负责人专用路由
+        {
+          path: "leader/activities",
+          name: "leader-activities",
+          component: () => import("../views/admin/ActivityManagement.vue"),
+          meta: { roles: [Role.LEADER], title: "活动管理 - 青柠社团管理系统" }
+        }
       ],
     },
   ],

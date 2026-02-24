@@ -166,6 +166,9 @@ export const getUserProfile = async (userId: number) => {
     email: user.email,
     role: user.role,
     avatar: user.avatar,
+    realName: user.realName,
+    sex: user.sex,
+    StudentId: user.StudentId,
   };
 };
 

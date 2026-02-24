@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
@@ -10,63 +10,77 @@ import {
   Monitor,
   Calendar,
   ChatDotRound,
-  Plus
+  Plus,
+  UserFilled,
+  Management,
+  List
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-const activeMenu = ref('home')
+const activeMenu = ref('')
 const searchQuery = ref('')
 
-onMounted(() => {
-  if (!userStore.user) {
-    userStore.fetchUserInfo()
+// 动态标题：管理员身份显示“管理系统”
+const title = computed(() => {
+  return userStore.user?.role === 'ADMIN' ? '青柠社团管理系统' : '青柠社团'
+})
+
+// 定义菜单条目
+const menuItems = computed(() => {
+  const role = userStore.user?.role
+  const items = [
+    { id: 'home', label: '首页概览', icon: Monitor, path: '/home' }
+  ]
+
+  if (role === 'ADMIN') {
+    // 管理员菜单
+    items.push(
+      { id: 'user-manage', label: '用户管理', icon: UserFilled, path: '/admin/users' },
+      { id: 'club-manage', label: '社团管理', icon: Management, path: '/admin/clubs' },
+      { id: 'activity-manage', label: '活动管理', icon: List, path: '/admin/activities' }
+    )
+  } else if (role === 'LEADER') {
+    // 负责人菜单
+    items.push(
+      { id: 'clubs', label: '发现社团', icon: Search, path: '/clubs' },
+      { id: 'activity-manage', label: '活动管理', icon: List, path: '/leader/activities' },
+      { id: 'my', label: '我的社团', icon: User, path: '/my' },
+      { id: 'create-club', label: '创建社团', icon: Plus, path: '/create-club' }
+    )
+  } else {
+    // 普通用户菜单
+    items.push(
+      { id: 'clubs', label: '发现社团', icon: Search, path: '/clubs' },
+      { id: 'activities', label: '社团活动', icon: Calendar, path: '/activities' },
+      { id: 'my', label: '我的社团', icon: User, path: '/my' },
+      { id: 'create-club', label: '创建社团', icon: Plus, path: '/create-club' }
+    )
   }
+
+  items.push({ id: 'messages', label: '消息通知', icon: ChatDotRound, path: '/messages' })
+  return items
+})
+
+onMounted(() => {
+  userStore.fetchUserInfo()
 })
 
 // Watch route change to update active menu
 watch(
   () => route.path,
   (path) => {
-    if (path.includes('/home')) activeMenu.value = 'home'
-    else if (path.includes('/clubs')) activeMenu.value = 'clubs'
-    else if (path.includes('/activities')) activeMenu.value = 'activities'
-    else if (path.includes('/my')) activeMenu.value = 'my'
-    else if (path.includes('/messages')) activeMenu.value = 'messages'
-    else if (path.includes('/create-club')) activeMenu.value = 'create-club'
-    else activeMenu.value = ''
+    const activeItem = menuItems.value.find(item => path.startsWith(item.path))
+    activeMenu.value = activeItem ? activeItem.id : ''
   },
   { immediate: true }
 )
 
-const handleMenuClick = (menu: string) => {
-  activeMenu.value = menu
-  // Map menu to route if needed
-  switch (menu) {
-    case 'home':
-      router.push('/home')
-      break
-    case 'clubs':
-      router.push('/clubs')
-      break
-    case 'activities':
-      router.push('/activities')
-      break
-    case 'my':
-      router.push('/my')
-      break
-    case 'messages':
-      router.push('/messages')
-      break
-    case 'create-club':
-      // 暂时跳转到创建社团页面，后续根据需求调整
-      router.push('/create-club')
-      break
-    default:
-      break
-  }
+const handleMenuClick = (item: any) => {
+  activeMenu.value = item.id
+  router.push(item.path)
 }
 
 const goToSettings = () => {
@@ -88,56 +102,18 @@ const getAvatarUrl = (path?: string) => {
     <aside class="sidebar">
       <div class="logo-area">
         <img src="/logo.png" alt="Logo" class="logo-img" />
-        <span class="logo-text">青柠社团</span>
+        <span class="logo-text">{{ title }}</span>
       </div>
       <nav class="nav-menu">
         <div 
+          v-for="item in menuItems"
+          :key="item.id"
           class="nav-item" 
-          :class="{ active: activeMenu === 'home' }"
-          @click="handleMenuClick('home')"
+          :class="{ active: activeMenu === item.id }"
+          @click="handleMenuClick(item)"
         >
-          <el-icon><Monitor /></el-icon>
-          <span>首页概览</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'clubs' }"
-          @click="handleMenuClick('clubs')"
-        >
-          <el-icon><Search /></el-icon>
-          <span>发现社团</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'activities' }"
-          @click="handleMenuClick('activities')"
-        >
-          <el-icon><Calendar /></el-icon>
-          <span>社团活动</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'my' }"
-          @click="handleMenuClick('my')"
-        >
-          <el-icon><User /></el-icon>
-          <span>我的社团</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'create-club' }"
-          @click="handleMenuClick('create-club')"
-        >
-          <el-icon><Plus /></el-icon>
-          <span>创建社团</span>
-        </div>
-        <div 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'messages' }"
-          @click="handleMenuClick('messages')"
-        >
-          <el-icon><ChatDotRound /></el-icon>
-          <span>消息通知</span>
+          <el-icon><component :is="item.icon" /></el-icon>
+          <span>{{ item.label }}</span>
         </div>
       </nav>
 

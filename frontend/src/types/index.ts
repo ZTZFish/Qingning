@@ -17,12 +17,46 @@ export enum Sex {
 }
 
 /**
- * 状态枚举 (用于社团申请、活动申请等)
+ * 通用状态枚举 (Status)
  */
 export enum Status {
   PENDING = "PENDING",
   APPROVED = "APPROVED",
   REJECTED = "REJECTED",
+}
+
+/**
+ * 社团成员状态枚举 (MembershipStatus)
+ */
+export enum MembershipStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  LEFT = "LEFT",
+}
+
+/**
+ * 活动状态枚举 (ActivityStatus)
+ */
+export enum ActivityStatus {
+  DRAFT = "DRAFT",
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  ONGOING = "ONGOING",
+  FINISHED = "FINISHED",
+  CANCELED = "CANCELED",
+}
+
+/**
+ * 活动参与/报名状态枚举 (ParticipationStatus)
+ */
+export enum ParticipationStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  ATTENDED = "ATTENDED",
+  CANCELED = "CANCELED",
 }
 
 /**
@@ -50,9 +84,13 @@ export interface User {
   realName?: string;
   sex?: Sex;
   StudentId?: number;
-  // 关联字段 (可选，根据 API 返回情况使用)
+  createdAt?: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
+  // 关联字段
   ledClubs?: Club[];
-  activities?: UserActivity[];
+  memberships?: ClubMembership[];
+  participated?: UserActivity[];
 }
 
 /**
@@ -61,20 +99,37 @@ export interface User {
 export interface Club {
   id: number;
   name: string;
+  type: ClubType;
   description: string | null;
-  coverImage?: string | null; // 社团封面
-  type?: ClubType; // 社团类型
+  coverImage?: string | null;
   leaderId: number;
   status: Status;
-  createdAt: string; // ISO 8601 字符串
-  updatedAt: string; // ISO 8601 字符串
+  createdAt: string;
+  updatedAt: string;
+  isDeleted: boolean;
   // 关联字段
   leader?: User;
+  members?: ClubMembership[];
   activities?: Activity[];
   announcements?: Announcement[];
   _count?: {
-    members: number; // 成员数量
+    members: number;
   };
+}
+
+/**
+ * 社团成员关系接口
+ */
+export interface ClubMembership {
+  userId: number;
+  clubId: number;
+  joinedAt: string;
+  status: MembershipStatus;
+  roleInClub: string | null;
+  notes: string | null;
+  // 关联字段
+  user?: User;
+  club?: Club;
 }
 
 /**
@@ -85,28 +140,16 @@ export interface Activity {
   clubId: number;
   name: string;
   description: string | null;
-  date: string; // 活动开始时间 ISO 8601
-  endAt: string; // 活动结束时间 ISO 8601
+  coverImage: string | null;
+  date: string;
+  endAt: string;
   location: string | null;
-  status: Status;
+  status: ActivityStatus;
   createdAt: string;
+  updatedAt: string;
   // 关联字段
   club?: Club;
   participants?: UserActivity[];
-}
-
-/**
- * 公告接口
- */
-export interface Announcement {
-  id: number;
-  clubId: number;
-  title: string;
-  content: string;
-  pinned: boolean;
-  createdAt: string;
-  // 关联字段
-  club?: Club;
 }
 
 /**
@@ -116,10 +159,28 @@ export interface UserActivity {
   userId: number;
   activityId: number;
   joinedAt: string;
-  status: Status;
+  status: ParticipationStatus;
+  notes: string | null;
   // 关联字段
   user?: User;
   activity?: Activity;
+}
+
+/**
+ * 公告接口
+ */
+export interface Announcement {
+  id: number;
+  clubId: number;
+  authorId: number | null;
+  title: string;
+  content: string;
+  pinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // 关联字段
+  club?: Club;
+  author?: User;
 }
 
 /**
@@ -137,4 +198,16 @@ export interface ResponseData<T = any> {
 export interface LoginResponse {
   token: string;
   user: User;
+}
+
+/**
+ * 通用列表组件列配置接口
+ */
+export interface Column {
+  label: string;
+  prop: string;
+  width?: string | number;
+  minWidth?: string | number;
+  type?: "avatar" | "tag" | "image" | "text";
+  tagMap?: Record<string, { label: string; type: string }>;
 }
