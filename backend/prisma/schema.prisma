@@ -73,6 +73,7 @@ model Club {
   type          ClubType  @default(OTHER)                         // 社团类型，使用枚举分类
   description   String?   @db.Text                                // 社团详细介绍，长文本，可为空
   coverImage    String?                                           // 社团封面图片URL或路径，可为空
+  materials     String?                                           // 社团手续图片URL或路径
   leaderId      Int                                               // 社团负责人（外键，必须存在）
 
   status        Status    @default(PENDING)                       // 社团当前状态（待审批/通过/拒绝）

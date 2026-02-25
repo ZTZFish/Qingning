@@ -12,7 +12,8 @@ import {
   adminUpdateUser,
 } from "../services/user.service"; // 导入 service 函数
 import { sendCode } from "../services/verification.service";
-import { Role, Sex } from "@prisma/client/index.js";
+import { deleteFile } from "../utils/file";
+import { Role, Sex } from "@prisma/client";
 
 // 发送验证码控制器
 export const sendVerificationCode = async (req: Request, res: Response) => {
@@ -84,8 +85,13 @@ export const uploadAvatar = async (req: Request, res: Response) => {
     }
 
     const userId = (req as any).user.id;
-    // 构建相对路径 URL，前端需要拼接 Base URL (e.g. http://localhost:3000)
-    // 或者这里也可以返回完整 URL，取决于需求。这里返回相对路径更灵活。
+    // 获取当前用户信息，以便删除旧头像
+    const user = await getUserProfile(userId);
+    if (user.avatar) {
+      deleteFile(user.avatar);
+    }
+
+    // 构建相对路径 URL
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
 
     // 更新用户数据库中的头像字段

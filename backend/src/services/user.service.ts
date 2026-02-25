@@ -2,7 +2,7 @@
 
 import bcrypt from "bcrypt"; // 导入 bcrypt 用于密码加密和比对
 import jwt from "jsonwebtoken"; // 导入 jsonwebtoken 用于生成 JWT token
-import { Role, Sex } from "@prisma/client/index.js";
+import { Role, Sex } from "@prisma/client";
 import {
   createUser,
   findUserByUsername,

@@ -1,7 +1,7 @@
 // src/repositories/user.repository.ts
 
 import prisma from "../prisma/client"; // 导入 Prisma Client 单例，确保全局唯一实例，避免连接池问题
-import { Role, Sex } from "@prisma/client/index.js";
+import { Role, Sex } from "@prisma/client";
 
 // 创建新用户（注册时调用）
 export const createUser = async (

@@ -39,15 +39,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import CommonList from '@/components/CommonList.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { ActivityStatus, Role, type Column } from '@/types'
+import { getActivities } from '@/api/activity'
 
 const userStore = useUserStore()
 const searchQuery = ref('')
+const activities = ref<any[]>([])
+const loading = ref(false)
 
 const columns: Column[] = [
   { label: '封面', prop: 'coverImage', type: 'image', width: '120' },
@@ -72,14 +75,30 @@ const columns: Column[] = [
   }
 ]
 
-// 模拟数据
-const activities = ref<any[]>([
-  { id: 1, name: '青柠编程大赛', club: { name: '青柠编程社' }, date: '2023-11-15 14:00', endAt: '2023-11-15 18:00', status: ActivityStatus.APPROVED, coverImage: '' },
-  { id: 2, name: '青柠杯羽毛球赛', club: { name: '青柠羽毛球社' }, date: '2023-11-20 09:00', endAt: '2023-11-20 17:00', status: ActivityStatus.ONGOING, coverImage: '' }
-])
-
 const filteredActivities = computed(() => {
-  return activities.value.filter(activity => activity.status !== ActivityStatus.PENDING)
+  const data = activities.value.filter(activity => activity.status !== ActivityStatus.PENDING)
+  if (!searchQuery.value) return data
+  const query = searchQuery.value.toLowerCase()
+  return data.filter(activity =>
+    activity.name.toLowerCase().includes(query) ||
+    (activity.club?.name && activity.club.name.toLowerCase().includes(query))
+  )
+})
+
+const fetchActivities = async () => {
+  loading.value = true
+  try {
+    const data = await getActivities()
+    activities.value = data
+  } catch (error: any) {
+    ElMessage.error(error.message || '获取列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchActivities()
 })
 
 const handlePublish = () => {

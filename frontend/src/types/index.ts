@@ -102,6 +102,7 @@ export interface Club {
   type: ClubType;
   description: string | null;
   coverImage?: string | null;
+  materials?: string | null;
   leaderId: number;
   status: Status;
   createdAt: string;

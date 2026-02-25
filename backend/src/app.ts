@@ -2,6 +2,8 @@ import express from "express"; // 导入 express
 import cors from "cors"; // 导入 cors（前端跨域）
 import userRoutes from "./routes/user.routes"; // 导入用户路由
 import authRoutes from "./routes/auth.routes"; // 导入认证路由
+import clubRoutes from "./routes/club.routes"; // 导入社团路由
+import activityRoutes from "./routes/activity.routes"; // 导入活动路由
 import path from "path"; // 导入 path 模块，用于处理文件路径
 import { fileURLToPath } from "url"; // ES模块中必须导入这个方法
 
@@ -25,6 +27,8 @@ app.use(
 // 挂载路由
 app.use("/api/users", userRoutes); // 用户资源相关
 app.use("/api/auth", authRoutes); // 认证相关 (登录、验证码)
+app.use("/api/clubs", clubRoutes); // 社团相关
+app.use("/api/activities", activityRoutes); // 活动相关
 
 // 测试接口
 app.get("/health", (_req, res) => {

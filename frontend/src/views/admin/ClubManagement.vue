@@ -31,13 +31,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import CommonList from '@/components/CommonList.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { Status, ClubType, type Column } from '@/types'
+import { getClubs } from '@/api/club'
 
 const searchQuery = ref('')
+const clubs = ref<any[]>([])
+const loading = ref(false)
 
 const columns: Column[] = [
   { label: '封面', prop: 'coverImage', type: 'image', width: '120' },
@@ -69,14 +72,30 @@ const columns: Column[] = [
   { label: '创建时间', prop: 'createdAt', width: '120' }
 ]
 
-// 模拟数据
-const clubs = ref<any[]>([
-  { id: 1, name: '青柠编程社', type: ClubType.TECH, leader: { realName: '张三' }, status: Status.APPROVED, createdAt: '2023-09-01', coverImage: '' },
-  { id: 2, name: '青柠羽毛球社', type: ClubType.SPORTS, leader: { realName: '李四' }, status: Status.APPROVED, createdAt: '2023-09-10', coverImage: '' }
-])
-
 const filteredClubs = computed(() => {
-  return clubs.value.filter(club => club.status !== Status.PENDING)
+  const data = clubs.value.filter(club => club.status !== Status.PENDING)
+  if (!searchQuery.value) return data
+  const query = searchQuery.value.toLowerCase()
+  return data.filter(club =>
+    club.name.toLowerCase().includes(query) ||
+    (club.leader?.realName && club.leader.realName.toLowerCase().includes(query))
+  )
+})
+
+const fetchClubs = async () => {
+  loading.value = true
+  try {
+    const data = await getClubs()
+    clubs.value = data
+  } catch (error: any) {
+    ElMessage.error(error.message || '获取列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchClubs()
 })
 
 const handleApprove = (row: any) => {

@@ -106,13 +106,13 @@ const handleLogin = async () => {
       // router.push('/admin/dashboard')
       // ElMessage.info('管理员后台建设中...')
       // 暂时都跳转到首页
-      router.push('/home')
+      router.push("admin/users")
     } else if (res.user.role === Role.LEADER) {
       // router.push('/leader/dashboard')
       // ElMessage.info('社团负责人中心建设中...')
-      router.push('/home')
+      router.push("leader/club")
     } else {
-      router.push('/home')
+      router.push("/home")
     }
   } catch (error: any) {
     ElMessage.error(error.message || '登录失败')
