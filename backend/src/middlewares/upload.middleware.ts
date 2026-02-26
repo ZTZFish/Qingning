@@ -1,7 +1,11 @@
-import multer from "multer";
+import multer, { MulterError } from "multer";
 import path from "path";
 import fs from "fs";
-import { Request } from "express";
+import { Request, Response, NextFunction } from "express";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 确保目录存在
 const ensureDir = (dirPath: string) => {
@@ -14,7 +18,8 @@ const ensureDir = (dirPath: string) => {
 const storage = (subDir: string) =>
   multer.diskStorage({
     destination: (_req: Request, _file, cb) => {
-      const uploadPath = path.join(process.cwd(), "public/uploads", subDir);
+      // 使用基于 __dirname 的相对路径，确保无论从哪个目录启动服务器都能找到正确的 public 目录
+      const uploadPath = path.join(__dirname, "../../public/uploads", subDir);
       ensureDir(uploadPath);
       cb(null, uploadPath);
     },
@@ -31,7 +36,11 @@ const storage = (subDir: string) =>
   });
 
 // 文件过滤器
-const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -42,11 +51,34 @@ const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFil
 
 // 导出创建上传中间件的函数
 export const createUploadMiddleware = (subDir: string) => {
-  return multer({
+  const upload = multer({
     storage: storage(subDir),
     fileFilter: fileFilter,
     limits: {
       fileSize: 5 * 1024 * 1024, // 限制 5MB
     },
   });
+
+  return {
+    single:
+      (fieldName: string) =>
+      (req: Request, res: Response, next: NextFunction) => {
+        upload.single(fieldName)(req, res, (err: any) => {
+          if (err) {
+            if (err instanceof MulterError) {
+              if (err.code === "LIMIT_FILE_SIZE") {
+                return res
+                  .status(400)
+                  .json({ code: 400, message: "文件体积过大，不能超过 5MB" });
+              }
+              return res
+                .status(400)
+                .json({ code: 400, message: `上传错误: ${err.message}` });
+            }
+            return res.status(400).json({ code: 400, message: err.message });
+          }
+          next();
+        });
+      },
+  };
 };

@@ -118,10 +118,10 @@ const getAvatarUrl = (path: string) => {
 const beforeAvatarUpload = (rawFile: any) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   if (!allowedTypes.includes(rawFile.type)) {
-    ElMessage.error('Avatar picture must be JPG/PNG/GIF/WEBP format!')
+    ElMessage.error('头像图片必须是 JPG/PNG/GIF/WEBP 格式！')
     return false
   } else if (rawFile.size / 1024 / 1024 > 5) {
-    ElMessage.error('Avatar picture size can not exceed 5MB!')
+    ElMessage.error('头像图片体积不能超过 5MB！')
     return false
   }
   return true
@@ -140,7 +140,9 @@ const handleAvatarUpload = async (options: any) => {
       ElMessage.success('头像上传成功')
     }
   } catch (error: any) {
-    ElMessage.error(error.message || '头像上传失败')
+    console.error('Avatar upload error:', error)
+    const msg = error.response?.data?.message || error.message || '上传失败'
+    ElMessage.error(`头像上传失败: ${msg}`)
   }
 }
 

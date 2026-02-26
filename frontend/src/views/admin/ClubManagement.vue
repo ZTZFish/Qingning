@@ -54,7 +54,10 @@ const columns: Column[] = [
       [ClubType.ACADEMIC]: { label: '学术类', type: 'primary' },
       [ClubType.SPORTS]: { label: '体育类', type: 'success' },
       [ClubType.ARTS]: { label: '文艺类', type: 'warning' },
-      [ClubType.TECH]: { label: '科技类', type: 'info' }
+      [ClubType.VOLUNTEER]: { label: '志愿公益类', type: 'danger' },
+      [ClubType.TECH]: { label: '科技类', type: 'info' },
+      [ClubType.ENTERTAINMENT]: { label: '娱乐类', type: 'success' },
+      [ClubType.OTHER]: { label: '其他', type: 'info' }
     }
   },
   { label: '负责人', prop: 'leader.realName', width: '100' },

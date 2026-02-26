@@ -177,6 +177,12 @@ const rules = reactive<FormRules>({
 })
 
 const handleCoverUpload = async (options: any) => {
+  const isLt5M = options.file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('图片体积不能超过 5MB')
+    return
+  }
+
   const formData = new FormData()
   formData.append('cover', options.file)
   try {
@@ -184,11 +190,19 @@ const handleCoverUpload = async (options: any) => {
     clubForm.coverImage = res.url
     ElMessage.success('封面上传成功')
   } catch (error: any) {
-    ElMessage.error(error.message || '上传失败')
+    console.error('Upload error:', error)
+    const msg = error.response?.data?.message || error.message || '上传失败'
+    ElMessage.error(`封面上传失败: ${msg}`)
   }
 }
 
 const handleMaterialsUpload = async (options: any) => {
+  const isLt5M = options.file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('手续照片体积不能超过 5MB')
+    return
+  }
+
   const formData = new FormData()
   formData.append('materials', options.file)
   try {
@@ -196,7 +210,9 @@ const handleMaterialsUpload = async (options: any) => {
     clubForm.materials = res.url
     ElMessage.success('手续照片上传成功')
   } catch (error: any) {
-    ElMessage.error(error.message || '上传失败')
+    console.error('Upload error:', error)
+    const msg = error.response?.data?.message || error.message || '上传失败'
+    ElMessage.error(`手续照片上传失败: ${msg}`)
   }
 }
 
