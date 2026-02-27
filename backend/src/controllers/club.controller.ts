@@ -6,6 +6,8 @@ import {
   getPendingClubs,
   auditClubApplication,
   getAllClubs,
+  getUserLedClubs,
+  transferClubLeadership,
 } from "../services/club.service";
 import { Status } from "@prisma/client";
 
@@ -89,6 +91,45 @@ export const getAuditList = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.status(500).json({ code: 500, message: error.message });
+  }
+};
+
+// 获取用户管理的社团
+export const getLedClubs = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const clubs = await getUserLedClubs(parseInt(userId, 10));
+    res.status(200).json({
+      code: 200,
+      message: "获取成功",
+      data: clubs,
+    });
+  } catch (error: any) {
+    res.status(500).json({ code: 500, message: error.message });
+  }
+};
+
+// 转让社团负责人
+export const transferLeader = async (req: Request, res: Response) => {
+  try {
+    const { clubId } = req.params;
+    const { newLeaderId } = req.body;
+
+    if (!newLeaderId) {
+      return res.status(400).json({ code: 400, message: "请指定新负责人" });
+    }
+
+    await transferClubLeadership(
+      parseInt(clubId, 10),
+      parseInt(newLeaderId, 10)
+    );
+
+    res.status(200).json({
+      code: 200,
+      message: "转让成功",
+    });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
   }
 };
 

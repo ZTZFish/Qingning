@@ -8,6 +8,8 @@ import {
   getClubList,
   uploadClubCover,
   uploadClubMaterials,
+  getLedClubs,
+  transferLeader,
 } from "../controllers/club.controller";
 import { authenticateJWT, checkRole } from "../middlewares/auth.middleware";
 import { createUploadMiddleware } from "../middlewares/upload.middleware";
@@ -18,6 +20,9 @@ const router = express.Router();
 // 1. 公共或普通用户路由
 // 获取社团列表（通常只显示已通过的，或者在 controller 里区分）
 router.get("/", authenticateJWT, getClubList);
+
+// 获取用户管理的社团
+router.get("/user/:userId", authenticateJWT, getLedClubs);
 
 // 提交社团申请
 router.post("/", authenticateJWT, createClubApplication);
@@ -44,5 +49,13 @@ router.get("/pending", authenticateJWT, checkRole([Role.ADMIN]), getAuditList);
 
 // 审批社团
 router.put("/:id/audit", authenticateJWT, checkRole([Role.ADMIN]), auditClub);
+
+// 转让社团负责人
+router.put(
+  "/:clubId/transfer",
+  authenticateJWT,
+  checkRole([Role.ADMIN]),
+  transferLeader
+);
 
 export default router;

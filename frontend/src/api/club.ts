@@ -64,3 +64,20 @@ export function getClubs(params?: {
 }) {
   return request.get<{ list: Club[]; total: number }>("/clubs", { params });
 }
+
+/**
+ * 获取用户管理的社团
+ * @param userId 用户ID
+ */
+export function getUserLedClubs(userId: number) {
+  return request.get<Club[]>(`/clubs/user/${userId}`);
+}
+
+/**
+ * 转让社团负责人
+ * @param clubId 社团ID
+ * @param newLeaderId 新负责人ID
+ */
+export function transferClubLeader(clubId: number, newLeaderId: number) {
+  return request.put(`/clubs/${clubId}/transfer`, { newLeaderId });
+}

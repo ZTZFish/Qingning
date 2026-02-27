@@ -43,7 +43,7 @@
         </el-table-column>
 
         <!-- 操作列 -->
-        <el-table-column label="操作" :width="actionWidth" fixed="right">
+        <el-table-column label="操作" :width="actionWidth" fixed="right" align="center">
           <template #default="scope">
             <div class="actions">
               <slot name="actions" :row="scope.row"></slot>
@@ -155,6 +155,11 @@ const getTagLabel = (val: any, tagMap?: any) => {
   gap: 8px;
   align-items: center;
   width: 100%;
+}
+
+.actions .el-button {
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .pagination-wrapper {

@@ -51,6 +51,59 @@
         >
       </template>
     </CommonList>
+    <el-dialog v-model="ledClubsDialogVisible" title="负责社团管理" width="600px">
+      <div v-if="currentLedClubs.length > 0">
+        <p>该用户负责以下社团，请选择要转移负责人的社团：</p>
+        <el-table :data="currentLedClubs" style="width: 100%">
+          <el-table-column prop="name" label="社团名称" />
+          <el-table-column label="操作" width="150">
+            <template #default="{ row }">
+              <el-button type="primary" link @click="handleTransferClick(row)"
+                >转移负责人</el-button
+              >
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div v-else class="empty-tip">该用户当前未负责任何社团。</div>
+    </el-dialog>
+
+    <el-dialog v-model="transferDialogVisible" title="选择新负责人" width="500px">
+      <el-form>
+        <el-form-item label="社团名称">
+          <el-input v-model="currentTransferClub.name" disabled />
+        </el-form-item>
+        <el-form-item label="新负责人">
+          <el-select
+            v-model="newLeaderId"
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入真实姓名搜索"
+            :remote-method="searchNewLeader"
+            :loading="searchLoading"
+          >
+            <el-option
+              v-for="item in userOptions"
+              :key="item.id"
+              :label="`${item.realName} (${item.username})`"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="transferDialogVisible = false">取消</el-button>
+          <el-button
+            type="primary"
+            @click="confirmTransfer"
+            :loading="transferLoading"
+            >确认转移</el-button
+          >
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -61,6 +114,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
 import { Role, type Column, type User } from "@/types";
 import { getAllUsers, adminUpdateUser } from "@/api/user";
+import { getUserLedClubs, transferClubLeader } from "@/api/club";
 
 const searchQuery = ref("");
 const users = ref<User[]>([]);
@@ -68,6 +122,16 @@ const loading = ref(false);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
+
+// 负责人管理相关
+const ledClubsDialogVisible = ref(false);
+const currentLedClubs = ref<any[]>([]);
+const transferDialogVisible = ref(false);
+const currentTransferClub = ref<any>({});
+const newLeaderId = ref<number | undefined>(undefined);
+const userOptions = ref<User[]>([]);
+const searchLoading = ref(false);
+const transferLoading = ref(false);
 
 const columns: Column[] = [
   { label: "头像", prop: "avatar", type: "avatar", width: "80" },
@@ -175,23 +239,92 @@ const handleSetLeader = async (row: User) => {
 
 const handleCancelLeader = async (row: User) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要取消用户 "${row.username}" 的负责人权限吗？`,
-      "提示",
-      {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      }
-    );
+    // 1. 获取该用户负责的社团列表
+    const clubs = await getUserLedClubs(row.id);
 
-    await adminUpdateUser(row.id, { role: Role.USER });
-    ElMessage.success("取消成功");
-    fetchUsers();
-  } catch (error) {
-    if (error !== "cancel") {
-      console.error(error);
+    if (clubs.length === 0) {
+      // 如果没有负责任何社团，直接取消负责人身份
+      await ElMessageBox.confirm(
+        `用户 "${row.username}" 当前未负责任何社团，确定要取消其负责人权限吗？`,
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        }
+      );
+      await adminUpdateUser(row.id, { role: Role.USER });
+      ElMessage.success("取消成功");
+      fetchUsers();
+    } else {
+      // 如果有负责的社团，显示弹窗
+      currentLedClubs.value = clubs;
+      ledClubsDialogVisible.value = true;
     }
+  } catch (error: any) {
+    if (error !== "cancel") {
+      ElMessage.error(error.message || "操作失败");
+    }
+  }
+};
+
+const handleTransferClick = (club: any) => {
+  currentTransferClub.value = club;
+  newLeaderId.value = undefined;
+  userOptions.value = [];
+  transferDialogVisible.value = true;
+};
+
+const searchNewLeader = async (query: string) => {
+  if (query) {
+    searchLoading.value = true;
+    try {
+      // 复用 getAllUsers 接口进行搜索，只取前 20 条
+      const res = await getAllUsers({
+        page: 1,
+        pageSize: 20,
+        search: query,
+      });
+      userOptions.value = res.list.filter((u) => u.role !== Role.ADMIN); // 排除管理员
+    } catch (error) {
+      console.error(error);
+    } finally {
+      searchLoading.value = false;
+    }
+  } else {
+    userOptions.value = [];
+  }
+};
+
+const confirmTransfer = async () => {
+  if (!newLeaderId.value) {
+    ElMessage.warning("请选择新负责人");
+    return;
+  }
+
+  transferLoading.value = true;
+  try {
+    await transferClubLeader(currentTransferClub.value.id, newLeaderId.value);
+    ElMessage.success("转让成功");
+    transferDialogVisible.value = false;
+
+    // 刷新负责社团列表
+    // 注意：这里的 currentLedClubs 是属于 handleCancelLeader 中点击的那个 row (用户) 的
+    // 我们需要重新获取该用户的负责社团，但 row 在这里访问不到，需要存一下
+    // 简单起见，我们直接从 currentLedClubs 中移除已转让的社团
+    const clubId = currentTransferClub.value.id;
+    currentLedClubs.value = currentLedClubs.value.filter((c) => c.id !== clubId);
+
+    // 如果列表空了，说明该用户不再负责任何社团，且后端逻辑应该已经将其降级为普通用户
+    // 刷新主列表以更新状态
+    if (currentLedClubs.value.length === 0) {
+      ledClubsDialogVisible.value = false;
+    }
+    fetchUsers();
+  } catch (error: any) {
+    ElMessage.error(error.message || "转让失败");
+  } finally {
+    transferLoading.value = false;
   }
 };
 
@@ -203,13 +336,12 @@ const handleViewDetail = (row: User) => {
       <p><strong>用户名:</strong> ${row.username}</p>
       <p><strong>邮箱:</strong> ${row.email}</p>
       <p><strong>真实姓名:</strong> ${row.realName || "未设置"}</p>
-      <p><strong>性别:</strong> ${
-        row.sex === "MALE" ? "男" : row.sex === "FEMALE" ? "女" : "未知"
-      }</p>
+      <p><strong>性别:</strong> ${row.sex === "MALE" ? "男" : row.sex === "FEMALE" ? "女" : "未知"
+    }</p>
       <p><strong>学号:</strong> ${row.StudentId || "未设置"}</p>
       <p><strong>注册时间:</strong> ${new Date(
-        row.createdAt
-      ).toLocaleString()}</p>
+      row.createdAt
+    ).toLocaleString()}</p>
     </div>
   `,
     "用户详情",

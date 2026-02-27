@@ -8,8 +8,9 @@ import {
   findClubById,
   updateClub,
   findAllClubs as repositoryFindAllClubs,
+  findClubsByLeaderId,
 } from "../repositories/club.repository";
-import { updateUser } from "../repositories/user.repository";
+import { updateUser, findUserById } from "../repositories/user.repository";
 import { deleteFile } from "../utils/file";
 
 export const applyForClub = async (data: {
@@ -95,4 +96,51 @@ export const getApprovedClubs = async () => {
   // 获取所有已批准的社团，暂不分页，或者设置一个较大的 limit
   const { clubs } = await findClubsByStatus(Status.APPROVED, 0, 1000);
   return clubs;
+};
+
+export const getUserLedClubs = async (userId: number) => {
+  return await findClubsByLeaderId(userId);
+};
+
+export const transferClubLeadership = async (
+  clubId: number,
+  newLeaderId: number
+) => {
+  const club = await findClubById(clubId);
+  if (!club) {
+    throw new Error("社团不存在");
+  }
+
+  const oldLeaderId = club.leaderId;
+
+  // 1. 检查新负责人是否存在
+  const newLeader = await findUserById(newLeaderId);
+  if (!newLeader) {
+    throw new Error("新负责人不存在");
+  }
+
+  // 2. 更新社团的 leaderId
+  await updateClub(clubId, { leaderId: newLeaderId });
+
+  // 3. 将新负责人的角色设为 LEADER
+  if (newLeader.role !== Role.LEADER) {
+    await updateUser(newLeaderId, { role: Role.LEADER });
+  }
+
+  // 4. 检查旧负责人是否还负责其他社团
+  const oldLeaderClubs = await findClubsByLeaderId(oldLeaderId);
+  // 注意：此时 oldLeaderClubs 可能还包含当前社团（如果事务未提交或并发问题），
+  // 但我们已经执行了 updateClub，所以再次查询应该不包含当前社团了。
+  // 为了保险起见，过滤掉当前 clubId
+  const remainingClubs = oldLeaderClubs.filter((c) => c.id !== clubId);
+
+  if (remainingClubs.length === 0) {
+    // 如果没有负责其他社团，降级为 USER
+    // 注意：如果旧负责人是 ADMIN，不应该降级，但这里假设只有 LEADER 会被操作
+    // 我们可以加一个判断，只有当他是 LEADER 时才降级
+    const oldLeader = await findUserById(oldLeaderId);
+    if (oldLeader && oldLeader.role === Role.LEADER) {
+      await updateUser(oldLeaderId, { role: Role.USER });
+    }
+  }
 };

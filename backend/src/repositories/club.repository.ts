@@ -75,6 +75,12 @@ export const findClubsByStatus = async (
   return { clubs, total };
 };
 
+export const findClubsByLeaderId = async (leaderId: number) => {
+  return await prisma.club.findMany({
+    where: { leaderId, isDeleted: false },
+  });
+};
+
 export const updateClub = async (id: number, data: any) => {
   return await prisma.club.update({
     where: { id },
