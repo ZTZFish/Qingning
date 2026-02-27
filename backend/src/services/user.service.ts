@@ -233,8 +233,20 @@ export const updateUserEmail = async (
 };
 
 // 获取所有用户列表（管理员专用）
-export const getAllUserList = async () => {
-  return await findAllUsers();
+export const getAllUserList = async (
+  page: number,
+  pageSize: number,
+  search?: string
+) => {
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+  const { users, total } = await findAllUsers(skip, take, search);
+  return {
+    list: users,
+    total,
+    page,
+    pageSize,
+  };
 };
 
 // 更新用户权限或状态（管理员专用）

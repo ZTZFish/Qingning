@@ -84,7 +84,7 @@ export interface User {
   realName?: string;
   sex?: Sex;
   StudentId?: number;
-  createdAt?: string;
+  createdAt: string;
   updatedAt?: string;
   isDeleted?: boolean;
   // 关联字段

@@ -67,21 +67,47 @@ export const findUserById = async (id: number) => {
 };
 
 // 获取所有用户（包括已封禁）
-export const findAllUsers = async () => {
-  return await prisma.user.findMany({
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      avatar: true,
-      role: true,
-      realName: true,
-      sex: true,
-      StudentId: true,
-      isDeleted: true,
-      createdAt: true,
-    },
-  });
+export const findAllUsers = async (
+  skip: number,
+  take: number,
+  search?: string
+) => {
+  const where: any = {};
+  if (search) {
+    where.OR = [
+      { username: { contains: search } }, // 移除 mode: 'insensitive' 因为 MySQL 默认不区分大小写，且 Prisma 对 MySQL 的 insensitive 支持有限
+      { realName: { contains: search } },
+    ];
+    // 尝试解析为数字，如果是数字则尝试匹配学号
+    const searchInt = parseInt(search, 10);
+    if (!isNaN(searchInt)) {
+      where.OR.push({ StudentId: { equals: searchInt } });
+    }
+  }
+
+  const [users, total] = await prisma.$transaction([
+    prisma.user.findMany({
+      where,
+      skip,
+      take,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        role: true,
+        realName: true,
+        sex: true,
+        StudentId: true,
+        isDeleted: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return { users, total };
 };
 
 // 更新用户信息

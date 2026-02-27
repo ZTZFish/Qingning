@@ -71,8 +71,12 @@ export function uploadAvatar(formData: FormData) {
 /**
  * 管理员获取所有用户列表
  */
-export function getAllUsers() {
-  return request.get<User[]>("/users");
+export function getAllUsers(params?: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}) {
+  return request.get<{ list: User[]; total: number }>("/users", { params });
 }
 
 /**

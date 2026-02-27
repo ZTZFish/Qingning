@@ -79,11 +79,13 @@ export const uploadClubMaterials = async (req: Request, res: Response) => {
 // 管理员获取待审批列表
 export const getAuditList = async (req: Request, res: Response) => {
   try {
-    const clubs = await getPendingClubs();
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+    const result = await getPendingClubs(page, pageSize);
     res.status(200).json({
       code: 200,
       message: "获取成功",
-      data: clubs,
+      data: result,
     });
   } catch (error: any) {
     res.status(500).json({ code: 500, message: error.message });
@@ -114,11 +116,14 @@ export const auditClub = async (req: Request, res: Response) => {
 // 获取所有社团列表（用于管理页面）
 export const getClubList = async (req: Request, res: Response) => {
   try {
-    const clubs = await getAllClubs();
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+    const search = (req.query.search as string) || undefined;
+    const result = await getAllClubs(page, pageSize, search);
     res.status(200).json({
       code: 200,
       message: "获取成功",
-      data: clubs,
+      data: result,
     });
   } catch (error: any) {
     res.status(500).json({ code: 500, message: error.message });

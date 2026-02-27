@@ -22,8 +22,20 @@ export const publishActivity = async (data: {
   return await createActivity(data);
 };
 
-export const getPendingActivities = async () => {
-  return await findActivitiesByStatus(ActivityStatus.PENDING);
+export const getPendingActivities = async (page: number, pageSize: number) => {
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+  const { activities, total } = await findActivitiesByStatus(
+    ActivityStatus.PENDING,
+    skip,
+    take
+  );
+  return {
+    list: activities,
+    total,
+    page,
+    pageSize,
+  };
 };
 
 export const auditActivityApplication = async (
@@ -51,6 +63,22 @@ export const auditActivityApplication = async (
   return updatedActivity;
 };
 
-export const getAllActivities = async () => {
-  return await repositoryFindAllActivities();
+export const getAllActivities = async (
+  page: number,
+  pageSize: number,
+  search?: string
+) => {
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+  const { activities, total } = await repositoryFindAllActivities(
+    skip,
+    take,
+    search
+  );
+  return {
+    list: activities,
+    total,
+    page,
+    pageSize,
+  };
 };

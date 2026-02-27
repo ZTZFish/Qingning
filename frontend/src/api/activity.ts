@@ -4,8 +4,14 @@ import type { Activity, ActivityStatus } from "@/types";
 /**
  * 获取活动列表
  */
-export function getActivities() {
-  return request.get<Activity[]>("/activities");
+export function getActivities(params?: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}) {
+  return request.get<{ list: Activity[]; total: number }>("/activities", {
+    params,
+  });
 }
 
 /**
@@ -29,13 +35,22 @@ export function uploadActivityCover(formData: FormData) {
 /**
  * 管理员获取待审批活动列表
  */
-export function getPendingActivities() {
-  return request.get<Activity[]>("/activities/pending");
+export function getPendingActivities(params?: {
+  page: number;
+  pageSize: number;
+}) {
+  return request.get<{ list: Activity[]; total: number }>(
+    "/activities/pending",
+    { params }
+  );
 }
 
 /**
  * 管理员审批活动
  */
-export function auditActivity(id: number, data: { status: ActivityStatus; reason?: string }) {
+export function auditActivity(
+  id: number,
+  data: { status: ActivityStatus; reason?: string }
+) {
   return request.put(`/activities/${id}/audit`, data);
 }

@@ -55,8 +55,10 @@ export const uploadActivityCover = async (req: Request, res: Response) => {
 
 export const getAuditList = async (req: Request, res: Response) => {
   try {
-    const activities = await getPendingActivities();
-    res.status(200).json({ code: 200, data: activities });
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+    const result = await getPendingActivities(page, pageSize);
+    res.status(200).json({ code: 200, data: result });
   } catch (error: any) {
     res.status(500).json({ code: 500, message: error.message });
   }
@@ -80,8 +82,11 @@ export const auditActivity = async (req: Request, res: Response) => {
 
 export const getActivityList = async (req: Request, res: Response) => {
   try {
-    const activities = await getAllActivities();
-    res.status(200).json({ code: 200, data: activities });
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+    const search = (req.query.search as string) || undefined;
+    const result = await getAllActivities(page, pageSize, search);
+    res.status(200).json({ code: 200, data: result });
   } catch (error: any) {
     res.status(500).json({ code: 500, message: error.message });
   }

@@ -47,22 +47,32 @@ export const findClubByName = async (name: string) => {
   });
 };
 
-export const findClubsByStatus = async (status: Status) => {
-  return await prisma.club.findMany({
-    where: { status, isDeleted: false },
-    include: {
-      leader: {
-        select: {
-          id: true,
-          username: true,
-          realName: true,
-          avatar: true,
-          role: true,
+export const findClubsByStatus = async (
+  status: Status,
+  skip: number,
+  take: number
+) => {
+  const [clubs, total] = await prisma.$transaction([
+    prisma.club.findMany({
+      where: { status, isDeleted: false },
+      include: {
+        leader: {
+          select: {
+            id: true,
+            username: true,
+            realName: true,
+            avatar: true,
+            role: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.club.count({ where: { status, isDeleted: false } }),
+  ]);
+  return { clubs, total };
 };
 
 export const updateClub = async (id: number, data: any) => {
@@ -72,18 +82,41 @@ export const updateClub = async (id: number, data: any) => {
   });
 };
 
-export const findAllClubs = async () => {
-  return await prisma.club.findMany({
-    where: { isDeleted: false },
-    include: {
-      leader: {
-        select: {
-          id: true,
-          username: true,
-          realName: true,
-          role: true,
+export const findAllClubs = async (
+  skip: number,
+  take: number,
+  search?: string
+) => {
+  const where: any = {
+    isDeleted: false,
+    status: { not: Status.PENDING }, // 默认排除待审批的，因为它们在审核列表
+  };
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search } },
+      { leader: { realName: { contains: search } } },
+    ];
+  }
+
+  const [clubs, total] = await prisma.$transaction([
+    prisma.club.findMany({
+      where,
+      include: {
+        leader: {
+          select: {
+            id: true,
+            username: true,
+            realName: true,
+            role: true,
+          },
         },
       },
-    },
-  });
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.club.count({ where }),
+  ]);
+  return { clubs, total };
 };

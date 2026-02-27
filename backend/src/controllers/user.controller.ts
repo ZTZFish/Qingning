@@ -148,11 +148,14 @@ export const resetPassword = async (req: Request, res: Response) => {
 // 获取所有用户列表（管理员专用）
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const users = await getAllUserList();
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+    const search = (req.query.search as string) || undefined;
+    const result = await getAllUserList(page, pageSize, search);
     res.status(200).json({
       code: 200,
       message: "获取成功",
-      data: users,
+      data: result,
     });
   } catch (error: any) {
     res.status(500).json({ code: 500, message: error.message });

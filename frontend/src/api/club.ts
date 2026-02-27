@@ -36,8 +36,10 @@ export function uploadClubMaterials(formData: FormData) {
 /**
  * 管理员获取待审批社团列表
  */
-export function getPendingClubs() {
-  return request.get<Club[]>("/clubs/pending");
+export function getPendingClubs(params?: { page: number; pageSize: number }) {
+  return request.get<{ list: Club[]; total: number }>("/clubs/pending", {
+    params,
+  });
 }
 
 /**
@@ -55,6 +57,10 @@ export function auditClub(
 /**
  * 获取所有社团列表（用于管理页面）
  */
-export function getClubs() {
-  return request.get<Club[]>("/clubs");
+export function getClubs(params?: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}) {
+  return request.get<{ list: Club[]; total: number }>("/clubs", { params });
 }

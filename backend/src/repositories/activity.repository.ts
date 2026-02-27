@@ -27,19 +27,29 @@ export const findActivityById = async (id: number) => {
   });
 };
 
-export const findActivitiesByStatus = async (status: ActivityStatus) => {
-  return await prisma.activity.findMany({
-    where: { status },
-    include: {
-      club: {
-        select: {
-          id: true,
-          name: true,
+export const findActivitiesByStatus = async (
+  status: ActivityStatus,
+  skip: number,
+  take: number
+) => {
+  const [activities, total] = await prisma.$transaction([
+    prisma.activity.findMany({
+      where: { status },
+      include: {
+        club: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.activity.count({ where: { status } }),
+  ]);
+  return { activities, total };
 };
 
 export const updateActivity = async (id: number, data: any) => {
@@ -49,15 +59,38 @@ export const updateActivity = async (id: number, data: any) => {
   });
 };
 
-export const findAllActivities = async () => {
-  return await prisma.activity.findMany({
-    include: {
-      club: {
-        select: {
-          id: true,
-          name: true,
+export const findAllActivities = async (
+  skip: number,
+  take: number,
+  search?: string
+) => {
+  const where: any = {
+    status: { not: ActivityStatus.PENDING }, // 排除待审批
+  };
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search } },
+      { club: { name: { contains: search } } },
+    ];
+  }
+
+  const [activities, total] = await prisma.$transaction([
+    prisma.activity.findMany({
+      where,
+      include: {
+        club: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-    },
-  });
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.activity.count({ where }),
+  ]);
+  return { activities, total };
 };

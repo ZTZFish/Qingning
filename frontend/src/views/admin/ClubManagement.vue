@@ -2,10 +2,13 @@
   <div class="club-management">
     <CommonList
       title="社团管理"
-      :data="filteredClubs"
+      :data="clubs"
       :columns="columns"
-      :total="filteredClubs.length"
+      :total="total"
       action-width="250"
+      :current-page="currentPage"
+      :page-size="pageSize"
+      @page-change="handlePageChange"
     >
       <template #header-actions>
         <el-button type="primary" @click="handleAddClub">创建社团</el-button>
@@ -15,91 +18,106 @@
           prefix-icon="Search"
           style="width: 240px; margin-left: 12px"
           clearable
+          @input="handleSearch"
         />
       </template>
 
       <template #actions="{ row }">
         <template v-if="row.status === 'PENDING'">
-          <el-button type="success" link @click="handleApprove(row)">通过</el-button>
-          <el-button type="danger" link @click="handleReject(row)">拒绝</el-button>
+          <el-button type="success" link @click="handleApprove(row)"
+            >通过</el-button
+          >
+          <el-button type="danger" link @click="handleReject(row)"
+            >拒绝</el-button
+          >
         </template>
         <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-        <el-button type="danger" link @click="handleDelete(row)">解散</el-button>
+        <el-button type="danger" link @click="handleDelete(row)"
+          >解散</el-button
+        >
       </template>
     </CommonList>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import CommonList from '@/components/CommonList.vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search } from '@element-plus/icons-vue'
-import { Status, ClubType, type Column } from '@/types'
-import { getClubs } from '@/api/club'
+import { ref, onMounted } from "vue";
+import CommonList from "@/components/CommonList.vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Search } from "@element-plus/icons-vue";
+import { Status, ClubType, type Column } from "@/types";
+import { getClubs } from "@/api/club";
 
-const searchQuery = ref('')
-const clubs = ref<any[]>([])
-const loading = ref(false)
+const searchQuery = ref("");
+const clubs = ref<any[]>([]);
+const loading = ref(false);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
 
 const columns: Column[] = [
-  { label: '封面', prop: 'coverImage', type: 'image', width: '120' },
-  { label: '社团名称', prop: 'name', minWidth: '120' },
+  { label: "封面", prop: "coverImage", type: "image", width: "120" },
+  { label: "社团名称", prop: "name", minWidth: "120" },
   {
-    label: '类型',
-    prop: 'type',
-    type: 'tag',
-    width: '120',
+    label: "类型",
+    prop: "type",
+    type: "tag",
+    width: "120",
     tagMap: {
-      [ClubType.ACADEMIC]: { label: '学术类', type: 'primary' },
-      [ClubType.SPORTS]: { label: '体育类', type: 'success' },
-      [ClubType.ARTS]: { label: '文艺类', type: 'warning' },
-      [ClubType.VOLUNTEER]: { label: '志愿公益类', type: 'danger' },
-      [ClubType.TECH]: { label: '科技类', type: 'info' },
-      [ClubType.ENTERTAINMENT]: { label: '娱乐类', type: 'success' },
-      [ClubType.OTHER]: { label: '其他', type: 'info' }
-    }
+      [ClubType.ACADEMIC]: { label: "学术类", type: "primary" },
+      [ClubType.SPORTS]: { label: "体育类", type: "success" },
+      [ClubType.ARTS]: { label: "文艺类", type: "warning" },
+      [ClubType.VOLUNTEER]: { label: "志愿公益类", type: "danger" },
+      [ClubType.TECH]: { label: "科技类", type: "info" },
+      [ClubType.ENTERTAINMENT]: { label: "娱乐类", type: "success" },
+      [ClubType.OTHER]: { label: "其他", type: "info" },
+    },
   },
-  { label: '负责人', prop: 'leader.realName', width: '100' },
+  { label: "负责人", prop: "leader.realName", width: "100" },
   {
-    label: '状态',
-    prop: 'status',
-    type: 'tag',
-    width: '120',
+    label: "状态",
+    prop: "status",
+    type: "tag",
+    width: "120",
     tagMap: {
-      [Status.PENDING]: { label: '待审批', type: 'warning' },
-      [Status.APPROVED]: { label: '正常', type: 'success' },
-      [Status.REJECTED]: { label: '已驳回', type: 'danger' }
-    }
+      [Status.PENDING]: { label: "待审批", type: "warning" },
+      [Status.APPROVED]: { label: "正常", type: "success" },
+      [Status.REJECTED]: { label: "已驳回", type: "danger" },
+    },
   },
-  { label: '创建时间', prop: 'createdAt', width: '120' }
-]
-
-const filteredClubs = computed(() => {
-  const data = clubs.value.filter(club => club.status !== Status.PENDING)
-  if (!searchQuery.value) return data
-  const query = searchQuery.value.toLowerCase()
-  return data.filter(club =>
-    club.name.toLowerCase().includes(query) ||
-    (club.leader?.realName && club.leader.realName.toLowerCase().includes(query))
-  )
-})
+  { label: "创建时间", prop: "createdAt", width: "120" },
+];
 
 const fetchClubs = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const data = await getClubs()
-    clubs.value = data
+    const data = await getClubs({
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      search: searchQuery.value,
+    });
+    clubs.value = data.list;
+    total.value = data.total;
   } catch (error: any) {
-    ElMessage.error(error.message || '获取列表失败')
+    ElMessage.error(error.message || "获取列表失败");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
+
+const handleSearch = () => {
+  currentPage.value = 1;
+  fetchClubs();
+};
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page;
+  fetchClubs();
+};
 
 onMounted(() => {
-  fetchClubs()
-})
+  fetchClubs();
+});
 
 const handleApprove = (row: any) => {
   ElMessageBox.confirm(`确定要通过社团 ${row.name} 的创建申请吗？`, '审批提示', {

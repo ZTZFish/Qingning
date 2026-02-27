@@ -14,20 +14,14 @@
       </template>
 
       <el-table :data="data" style="width: 100%" v-loading="loading">
-        <el-table-column
-          v-for="col in columns"
-          :key="col.prop"
-          :prop="col.prop"
-          :label="col.label"
-          :width="col.width"
-          :min-width="col.minWidth"
-        >
+        <el-table-column v-for="col in columns" :key="col.prop" :prop="col.prop" :label="col.label" :width="col.width"
+          :min-width="col.minWidth">
           <template #default="scope">
             <!-- 自定义渲染：头像 -->
             <template v-if="col.type === 'avatar'">
               <el-avatar :size="40" :src="getAvatarUrl(getNestedValue(scope.row, col.prop))" />
             </template>
-            
+
             <!-- 自定义渲染：标签/状态 -->
             <template v-else-if="col.type === 'tag'">
               <el-tag :type="getTagType(getNestedValue(scope.row, col.prop), col.tagMap)">
@@ -37,11 +31,8 @@
 
             <!-- 自定义渲染：图片 -->
             <template v-else-if="col.type === 'image'">
-              <el-image 
-                style="width: 80px; height: 45px; border-radius: 4px" 
-                :src="getImageUrl(getNestedValue(scope.row, col.prop))" 
-                fit="cover"
-              />
+              <el-image style="width: 80px; height: 45px; border-radius: 4px"
+                :src="getImageUrl(getNestedValue(scope.row, col.prop))" fit="cover" />
             </template>
 
             <!-- 默认渲染文本 -->
@@ -63,13 +54,8 @@
 
       <!-- 分页 -->
       <div class="pagination-wrapper" v-if="total !== undefined && total > 0">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="total"
-          layout="total, prev, pager, next"
-          @current-change="handlePageChange"
-        />
+        <el-pagination :current-page="currentPage" :page-size="pageSize" :total="total"
+          layout="total, prev, pager, next" @current-change="handlePageChange" />
       </div>
     </el-card>
   </div>
@@ -79,19 +65,26 @@
 import { ref } from 'vue'
 import type { Column } from '@/types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title: string;
   data: any[];
   columns: Column[];
   loading?: boolean;
   total?: number;
   actionWidth?: string | number;
-}>()
+  currentPage?: number;
+  pageSize?: number;
+}>(), {
+  currentPage: 1,
+  pageSize: 10
+})
 
-const emit = defineEmits(['page-change'])
+const emit = defineEmits(['page-change', 'update:currentPage'])
 
-const currentPage = ref(1)
-const pageSize = ref(10)
+const handlePageChange = (page: number) => {
+  emit('update:currentPage', page)
+  emit('page-change', page)
+}
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
 
@@ -120,10 +113,6 @@ const getTagType = (val: any, tagMap?: any) => {
 const getTagLabel = (val: any, tagMap?: any) => {
   if (tagMap && tagMap[val]) return tagMap[val].label
   return val
-}
-
-const handlePageChange = (page: number) => {
-  emit('page-change', page)
 }
 </script>
 
@@ -161,8 +150,11 @@ const handlePageChange = (page: number) => {
 }
 
 .actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
   gap: 8px;
+  align-items: center;
+  width: 100%;
 }
 
 .pagination-wrapper {

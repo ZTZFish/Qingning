@@ -29,8 +29,16 @@ export const applyForClub = async (data: {
   return await createClub(data);
 };
 
-export const getPendingClubs = async () => {
-  return await findClubsByStatus(Status.PENDING);
+export const getPendingClubs = async (page: number, pageSize: number) => {
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+  const { clubs, total } = await findClubsByStatus(Status.PENDING, skip, take);
+  return {
+    list: clubs,
+    total,
+    page,
+    pageSize,
+  };
 };
 
 export const auditClubApplication = async (
@@ -65,12 +73,26 @@ export const auditClubApplication = async (
   return updatedClub;
 };
 
-export const getAllClubs = async () => {
+export const getAllClubs = async (
+  page: number,
+  pageSize: number,
+  search?: string
+) => {
   // 这里可以根据需求过滤，通常管理页面显示所有非删除的，
   // 但用户页面显示 APPROVED 的。
-  return await repositoryFindAllClubs();
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+  const { clubs, total } = await repositoryFindAllClubs(skip, take, search);
+  return {
+    list: clubs,
+    total,
+    page,
+    pageSize,
+  };
 };
 
 export const getApprovedClubs = async () => {
-  return await findClubsByStatus(Status.APPROVED);
+  // 获取所有已批准的社团，暂不分页，或者设置一个较大的 limit
+  const { clubs } = await findClubsByStatus(Status.APPROVED, 0, 1000);
+  return clubs;
 };

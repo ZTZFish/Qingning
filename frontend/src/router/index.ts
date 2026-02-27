@@ -92,13 +92,7 @@ router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
   const token = localStorage.getItem("token");
 
-  // 1. 如果用户已登录且访问登录页 -> 重定向到首页
-  if (to.path === "/login" && token) {
-    next({ name: "home" });
-    return;
-  }
-
-  // 2. 检查是否需要认证
+  // 1. 检查是否需要认证
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!token) {
       // 未登录 -> 重定向到登录页
