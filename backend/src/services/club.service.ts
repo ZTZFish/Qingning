@@ -12,6 +12,7 @@ import {
 } from "../repositories/club.repository";
 import { updateUser, findUserById } from "../repositories/user.repository";
 import { deleteFile } from "../utils/file";
+import { formatDateTime } from "../utils/date";
 
 export const applyForClub = async (data: {
   name: string;
@@ -34,8 +35,16 @@ export const getPendingClubs = async (page: number, pageSize: number) => {
   const skip = (page - 1) * pageSize;
   const take = pageSize;
   const { clubs, total } = await findClubsByStatus(Status.PENDING, skip, take);
+
+  // 格式化时间
+  const formattedClubs = clubs.map(club => ({
+    ...club,
+    createdAt: formatDateTime(club.createdAt),
+    updatedAt: formatDateTime(club.updatedAt)
+  }));
+
   return {
-    list: clubs,
+    list: formattedClubs,
     total,
     page,
     pageSize,
@@ -84,8 +93,16 @@ export const getAllClubs = async (
   const skip = (page - 1) * pageSize;
   const take = pageSize;
   const { clubs, total } = await repositoryFindAllClubs(skip, take, search);
+
+  // 格式化时间
+  const formattedClubs = clubs.map(club => ({
+    ...club,
+    createdAt: formatDateTime(club.createdAt),
+    updatedAt: formatDateTime(club.updatedAt)
+  }));
+
   return {
-    list: clubs,
+    list: formattedClubs,
     total,
     page,
     pageSize,
@@ -95,11 +112,28 @@ export const getAllClubs = async (
 export const getApprovedClubs = async () => {
   // 获取所有已批准的社团，暂不分页，或者设置一个较大的 limit
   const { clubs } = await findClubsByStatus(Status.APPROVED, 0, 1000);
-  return clubs;
+
+  // 格式化时间
+  const formattedClubs = clubs.map(club => ({
+    ...club,
+    createdAt: formatDateTime(club.createdAt),
+    updatedAt: formatDateTime(club.updatedAt)
+  }));
+
+  return formattedClubs;
 };
 
 export const getUserLedClubs = async (userId: number) => {
-  return await findClubsByLeaderId(userId);
+  const clubs = await findClubsByLeaderId(userId);
+
+  // 格式化时间
+  const formattedClubs = clubs.map(club => ({
+    ...club,
+    createdAt: formatDateTime(club.createdAt),
+    updatedAt: formatDateTime(club.updatedAt)
+  }));
+
+  return formattedClubs;
 };
 
 export const transferClubLeadership = async (

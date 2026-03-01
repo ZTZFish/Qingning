@@ -1,40 +1,20 @@
 <template>
   <div class="club-management">
-    <CommonList
-      title="社团管理"
-      :data="clubs"
-      :columns="columns"
-      :total="total"
-      action-width="250"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      @page-change="handlePageChange"
-    >
+    <CommonList title="社团管理" :data="clubs" :columns="columns" :total="total" action-width="250"
+      :current-page="currentPage" :page-size="pageSize" @page-change="handlePageChange">
       <template #header-actions>
         <el-button type="primary" @click="handleAddClub">创建社团</el-button>
-        <el-input
-          v-model="searchQuery"
-          placeholder="搜索社团名称/类型/负责人"
-          prefix-icon="Search"
-          style="width: 240px; margin-left: 12px"
-          clearable
-          @input="handleSearch"
-        />
+        <el-input v-model="searchQuery" placeholder="搜索社团名称/类型/负责人" prefix-icon="Search"
+          style="width: 240px; margin-left: 12px" clearable @input="handleSearch" />
       </template>
 
       <template #actions="{ row }">
         <template v-if="row.status === 'PENDING'">
-          <el-button type="success" link @click="handleApprove(row)"
-            >通过</el-button
-          >
-          <el-button type="danger" link @click="handleReject(row)"
-            >拒绝</el-button
-          >
+          <el-button type="success" link @click="handleApprove(row)">通过</el-button>
+          <el-button type="danger" link @click="handleReject(row)">拒绝</el-button>
         </template>
         <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-        <el-button type="danger" link @click="handleDelete(row)"
-          >解散</el-button
-        >
+        <el-button type="danger" link @click="handleDelete(row)">解散</el-button>
       </template>
     </CommonList>
   </div>
@@ -68,7 +48,7 @@ const columns: Column[] = [
       [ClubType.SPORTS]: { label: "体育类", type: "success" },
       [ClubType.ARTS]: { label: "文艺类", type: "warning" },
       [ClubType.VOLUNTEER]: { label: "志愿公益类", type: "danger" },
-      [ClubType.TECH]: { label: "科技类", type: "info" },
+      [ClubType.TECH]: { label: "科技类", type: "" },
       [ClubType.ENTERTAINMENT]: { label: "娱乐类", type: "success" },
       [ClubType.OTHER]: { label: "其他", type: "info" },
     },
