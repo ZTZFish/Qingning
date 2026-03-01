@@ -7,9 +7,130 @@ import {
   auditClubApplication,
   getAllClubs,
   getUserLedClubs,
+  getUserJoinedClubs,
   transferClubLeadership,
+  getClubInfo,
+  joinClub,
+  leaveClub,
+  getMembers,
+  getPendingApplications,
+  auditMembership,
 } from "../services/club.service";
-import { Status } from "@prisma/client";
+import { Status, MembershipStatus } from "@prisma/client";
+
+// 获取社团详情
+export const getClubDetail = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user.id;
+    const result = await getClubInfo(parseInt(id, 10), userId);
+    res.status(200).json({
+      code: 200,
+      message: "获取成功",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ code: 500, message: error.message });
+  }
+};
+
+// 申请加入社团
+export const join = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user.id;
+    await joinClub(userId, parseInt(id, 10));
+    res.status(200).json({
+      code: 200,
+      message: "申请已提交",
+    });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
+// 退出社团
+export const leave = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user.id;
+    await leaveClub(userId, parseInt(id, 10));
+    res.status(200).json({
+      code: 200,
+      message: "已退出社团",
+    });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
+// 获取社团成员列表
+export const getClubMembers = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+    const result = await getMembers(parseInt(id, 10), page, pageSize);
+    res.status(200).json({
+      code: 200,
+      message: "获取成功",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ code: 500, message: error.message });
+  }
+};
+
+// 获取入社申请列表
+export const getApplications = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user.id;
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+
+    const result = await getPendingApplications(
+      parseInt(id, 10),
+      userId,
+      page,
+      pageSize
+    );
+    res.status(200).json({
+      code: 200,
+      message: "获取成功",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ code: 500, message: error.message });
+  }
+};
+
+// 审批入社申请
+export const auditApplication = async (req: Request, res: Response) => {
+  try {
+    const { id, memberId } = req.params;
+    const { status } = req.body;
+    const userId = (req as any).user.id;
+
+    if (!status) {
+      return res.status(400).json({ code: 400, message: "请指定审批状态" });
+    }
+
+    await auditMembership(
+      parseInt(id, 10),
+      userId,
+      parseInt(memberId, 10),
+      status as MembershipStatus
+    );
+
+    res.status(200).json({
+      code: 200,
+      message: status === "APPROVED" ? "已批准加入" : "已拒绝申请",
+    });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
 
 // 用户提交社团申请
 export const createClubApplication = async (req: Request, res: Response) => {
@@ -103,6 +224,28 @@ export const getLedClubs = async (req: Request, res: Response) => {
       code: 200,
       message: "获取成功",
       data: clubs,
+    });
+  } catch (error: any) {
+    res.status(500).json({ code: 500, message: error.message });
+  }
+};
+
+// 获取用户加入的社团
+export const getJoinedClubs = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+
+    const result = await getUserJoinedClubs(
+      parseInt(userId, 10),
+      page,
+      pageSize
+    );
+    res.status(200).json({
+      code: 200,
+      message: "获取成功",
+      data: result,
     });
   } catch (error: any) {
     res.status(500).json({ code: 500, message: error.message });

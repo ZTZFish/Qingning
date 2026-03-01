@@ -47,16 +47,15 @@ const menuItems = computed(() => {
     items = [
       { id: 'club-manage', label: '社团管理', icon: Management, path: '/leader/club' },
       { id: 'activity-manage', label: '活动管理', icon: List, path: '/leader/activities' },
-      { id: 'my', label: '我的社团', icon: User, path: '/my' },
-      { id: 'add-activity', label: '添加活动', icon: Plus, path: '/leader/add-activity' },
+      { id: 'join-apply', label: '入社申请', icon: User, path: '/leader/join-apply' },
     ]
   } else {
     // 普通用户菜单
     items = [
       { id: 'home', label: '首页概览', icon: Monitor, path: '/home' },
-      { id: 'clubs', label: '发现社团', icon: Search, path: '/clubs' },
+      { id: 'discover-clubs', label: '发现社团', icon: Search, path: '/clubs' },
+      { id: 'my-clubs', label: '我的社团', icon: User, path: '/my' },
       { id: 'activities', label: '社团活动', icon: Calendar, path: '/activities' },
-      { id: 'my', label: '我的社团', icon: User, path: '/my' },
       { id: 'create-club', label: '创建社团', icon: Plus, path: '/create-club' }
     ]
   }

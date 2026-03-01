@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Calendar, User, ArrowRight } from '@element-plus/icons-vue'
+import { User, Avatar } from '@element-plus/icons-vue'
 import { type Club, ClubType } from '@/types'
 
 const props = defineProps<{
@@ -11,11 +11,13 @@ const emit = defineEmits<{
   (e: 'click', club: Club): void
 }>()
 
-// 格式化日期
-const formattedDate = computed(() => {
-  const date = new Date(props.club.createdAt)
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
-})
+const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
+
+const getFullUrl = (path?: string) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `${BASE_URL}${path}`
+}
 
 // 截断描述
 const truncatedDescription = computed(() => {
@@ -25,15 +27,15 @@ const truncatedDescription = computed(() => {
     : props.club.description
 })
 
-// 社团类型映射
+// 社团类型映射 (保持与管理后台一致)
 const clubTypeMap: Record<string, { label: string; color: string }> = {
-  [ClubType.ACADEMIC]: { label: '学术', color: '#409EFF' },
-  [ClubType.SPORTS]: { label: '体育', color: '#E6A23C' },
-  [ClubType.ARTS]: { label: '文艺', color: '#F56C6C' },
-  [ClubType.VOLUNTEER]: { label: '公益', color: '#67C23A' },
-  [ClubType.TECH]: { label: '科技', color: '#909399' },
-  [ClubType.ENTERTAINMENT]: { label: '娱乐', color: '#E91E63' },
-  [ClubType.OTHER]: { label: '其他', color: '#606266' },
+  [ClubType.ACADEMIC]: { label: '学术类', color: '#409EFF' }, // primary
+  [ClubType.SPORTS]: { label: '体育类', color: '#67C23A' },   // success
+  [ClubType.ARTS]: { label: '文艺类', color: '#E6A23C' },     // warning
+  [ClubType.VOLUNTEER]: { label: '志愿公益类', color: '#F56C6C' }, // danger
+  [ClubType.TECH]: { label: '科技类', color: '#409EFF' },     // default/primary
+  [ClubType.ENTERTAINMENT]: { label: '娱乐类', color: '#67C23A' }, // success
+  [ClubType.OTHER]: { label: '其他', color: '#909399' },      // info
 }
 
 const clubTypeInfo = computed(() => {
@@ -58,35 +60,39 @@ const randomGradient = computed(() => {
   <el-card class="club-card" :body-style="{ padding: '0px' }" shadow="hover" @click="emit('click', club)">
     <div class="card-image-wrapper">
       <template v-if="club.coverImage">
-        <img :src="club.coverImage" class="club-cover-img" alt="社团封面" />
+        <img :src="getFullUrl(club.coverImage)" class="club-cover-img" alt="社团封面" />
       </template>
       <template v-else>
         <div class="card-cover" :style="{ background: randomGradient }">
           <span class="club-placeholder-text">{{ club.name.slice(0, 2) }}</span>
         </div>
       </template>
-      
+
       <!-- 类型徽章 -->
       <div class="club-badge" :style="{ backgroundColor: clubTypeInfo.color }">
         {{ clubTypeInfo.label }}
       </div>
     </div>
-    
+
     <div class="card-content">
       <div class="club-info">
         <h3 class="club-name">{{ club.name }}</h3>
         <p class="club-desc">{{ truncatedDescription }}</p>
       </div>
-      
+
       <div class="club-meta">
         <div class="meta-row">
           <div class="meta-item">
-            <el-icon><User /></el-icon>
-            <span>{{ club._count?.members || 0 }} 人</span>
+            <el-icon>
+              <User />
+            </el-icon>
+            <span>{{ (club._count?.members || 0) + 1 }} 人</span>
           </div>
           <div class="meta-item">
-            <el-icon><Calendar /></el-icon>
-            <span>{{ formattedDate }}</span>
+            <el-icon>
+              <Avatar />
+            </el-icon>
+            <span>{{ club.leader?.realName || club.leader?.username || '未知' }}</span>
           </div>
         </div>
       </div>

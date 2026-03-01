@@ -28,7 +28,7 @@ model User {
   role        Role      @default(USER)                          // 用户角色，默认普通用户
   realName    String   @default("")                              // 真实姓名
   sex         Sex      @default(UNKNOWN)                         // 性别
-  StudentId   Int      @unique                                   // 学号
+  studentId   Int      @unique                                   // 学号
 
   createdAt   DateTime  @default(now())                         // 账号创建时间，自动设置为记录插入时刻
   updatedAt   DateTime  @updatedAt                               // 记录最后更新时间，自动更新

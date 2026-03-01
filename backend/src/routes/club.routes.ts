@@ -9,7 +9,14 @@ import {
   uploadClubCover,
   uploadClubMaterials,
   getLedClubs,
+  getJoinedClubs,
   transferLeader,
+  getClubDetail,
+  join,
+  leave,
+  getClubMembers,
+  getApplications,
+  auditApplication,
 } from "../controllers/club.controller";
 import { authenticateJWT, checkRole } from "../middlewares/auth.middleware";
 import { createUploadMiddleware } from "../middlewares/upload.middleware";
@@ -22,7 +29,10 @@ const router = express.Router();
 router.get("/", authenticateJWT, getClubList);
 
 // 获取用户管理的社团
-router.get("/user/:userId", authenticateJWT, getLedClubs);
+router.get("/user/:userId/led", authenticateJWT, getLedClubs);
+
+// 获取用户加入的社团
+router.get("/user/:userId/joined", authenticateJWT, getJoinedClubs);
 
 // 提交社团申请
 router.post("/", authenticateJWT, createClubApplication);
@@ -46,6 +56,34 @@ router.post(
 // 2. 管理员专用路由
 // 获取待审批列表
 router.get("/pending", authenticateJWT, checkRole([Role.ADMIN]), getAuditList);
+
+// 获取社团详情
+router.get("/:id", authenticateJWT, getClubDetail);
+
+// 申请加入社团
+router.post("/:id/join", authenticateJWT, join);
+
+// 退出社团
+router.post("/:id/leave", authenticateJWT, leave);
+
+// 获取社团成员
+router.get("/:id/members", authenticateJWT, getClubMembers);
+
+// 获取入社申请列表 (负责人)
+router.get(
+  "/:id/applications",
+  authenticateJWT,
+  checkRole([Role.LEADER]),
+  getApplications
+);
+
+// 审批入社申请 (负责人)
+router.put(
+  "/:id/applications/:memberId",
+  authenticateJWT,
+  checkRole([Role.LEADER]),
+  auditApplication
+);
 
 // 审批社团
 router.put("/:id/audit", authenticateJWT, checkRole([Role.ADMIN]), auditClub);

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   User,
   Monitor,
@@ -9,7 +10,11 @@ import {
   ArrowRight
 } from '@element-plus/icons-vue'
 import ClubCard from '@/components/ClubCard.vue'
-import { type Club, Status, Role, ClubType } from '@/types'
+import { type Club } from '@/types'
+import { ElMessage } from 'element-plus'
+import { getClubs } from '@/api/club'
+
+const router = useRouter()
 
 // 模拟数据
 const banners = [
@@ -51,84 +56,29 @@ const announcements = [
   { id: 3, title: '新学期社团负责人会议通知', date: '2024-03-05', tag: '会议' },
 ]
 
-const clubs: Club[] = [
-  {
-    id: 1,
-    name: '青柠摄影协会',
-    description: '捕捉生活中的每一刻美好。我们定期组织外拍活动、摄影讲座和后期处理教程。',
-    leaderId: 101,
-    status: Status.APPROVED,
-    createdAt: '2023-09-01T00:00:00.000Z',
-    updatedAt: '2023-09-01T00:00:00.000Z',
-    type: ClubType.ARTS,
-    coverImage: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
-    _count: { members: 58 },
-    leader: {
-      id: 101,
-      username: '张摄影',
-      email: 'zhang@example.com',
-      role: Role.LEADER
-    }
-  },
-  {
-    id: 2,
-    name: '极客计算机社',
-    description: '探索代码的奥秘，分享最新的技术动态。无论你是小白还是大神，都欢迎加入！',
-    leaderId: 102,
-    status: Status.APPROVED,
-    createdAt: '2023-09-05T00:00:00.000Z',
-    updatedAt: '2023-09-05T00:00:00.000Z',
-    type: ClubType.TECH,
-    coverImage: null,
-    _count: { members: 120 },
-    leader: {
-      id: 102,
-      username: '李代码',
-      email: 'li@example.com',
-      role: Role.LEADER
-    }
-  },
-  {
-    id: 3,
-    name: '羽毛球协会',
-    description: '挥洒汗水，强身健体。每周定期组织训练和比赛，欢迎热爱运动的你。',
-    leaderId: 103,
-    status: Status.APPROVED,
-    createdAt: '2023-09-10T00:00:00.000Z',
-    updatedAt: '2023-09-10T00:00:00.000Z',
-    type: ClubType.SPORTS,
-    coverImage: 'https://images.unsplash.com/photo-1626224583764-84786c719794?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
-    _count: { members: 85 },
-    leader: {
-      id: 103,
-      username: '王运动',
-      email: 'wang@example.com',
-      role: Role.LEADER
-    }
-  },
-  {
-    id: 4,
-    name: '话剧社',
-    description: '体验不一样的人生，感受舞台的魅力。我们需要演员、编剧、导演和幕后人员。',
-    leaderId: 104,
-    status: Status.APPROVED,
-    createdAt: '2023-09-15T00:00:00.000Z',
-    updatedAt: '2023-09-15T00:00:00.000Z',
-    type: ClubType.ARTS,
-    coverImage: null,
-    _count: { members: 42 },
-    leader: {
-      id: 104,
-      username: '赵戏剧',
-      email: 'zhao@example.com',
-      role: Role.LEADER
-    }
-  },
-]
+const clubs = ref<Club[]>([])
+const loading = ref(false)
+
+const fetchClubs = async () => {
+  loading.value = true
+  try {
+    const res = await getClubs({ page: 1, pageSize: 6 })
+    clubs.value = res.list
+  } catch (error: any) {
+    ElMessage.error(error.message || '获取社团列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchClubs()
+})
 
 const handleClubClick = (club: any) => {
-  console.log('Clicked club:', club)
+  router.push(`/clubs/${club.id}`)
 }
+
 </script>
 
 <template>
@@ -155,9 +105,11 @@ const handleClubClick = (club: any) => {
         <!-- 推荐社团 -->
         <div class="section-header">
           <h3>推荐社团</h3>
-          <el-button link>查看全部 <el-icon><ArrowRight /></el-icon></el-button>
+          <el-button link>查看全部 <el-icon>
+              <ArrowRight />
+            </el-icon></el-button>
         </div>
-        <div class="clubs-grid">
+        <div class="clubs-grid" v-loading="loading">
           <div v-for="club in clubs" :key="club.id" class="club-wrapper">
             <ClubCard :club="club" @click="handleClubClick" />
           </div>
@@ -166,7 +118,9 @@ const handleClubClick = (club: any) => {
         <!-- 最新活动 -->
         <div class="section-header mt-8">
           <h3>最新活动</h3>
-          <el-button link>更多活动 <el-icon><ArrowRight /></el-icon></el-button>
+          <el-button link>更多活动 <el-icon>
+              <ArrowRight />
+            </el-icon></el-button>
         </div>
         <div class="activities-scroll">
           <div v-for="activity in activities" :key="activity.id" class="activity-card">
@@ -176,10 +130,14 @@ const handleClubClick = (club: any) => {
             <div class="activity-info">
               <h4>{{ activity.title }}</h4>
               <div class="info-row">
-                <el-icon><Calendar /></el-icon> <span>{{ activity.date }}</span>
+                <el-icon>
+                  <Calendar />
+                </el-icon> <span>{{ activity.date }}</span>
               </div>
               <div class="info-row">
-                <el-icon><Location /></el-icon> <span>{{ activity.location }}</span>
+                <el-icon>
+                  <Location />
+                </el-icon> <span>{{ activity.location }}</span>
               </div>
             </div>
           </div>
@@ -211,15 +169,21 @@ const handleClubClick = (club: any) => {
           </div>
           <div class="quick-links">
             <div class="quick-link-item">
-              <div class="icon-box blue"><el-icon><Monitor /></el-icon></div>
+              <div class="icon-box blue"><el-icon>
+                  <Monitor />
+                </el-icon></div>
               <span>活动签到</span>
             </div>
             <div class="quick-link-item">
-              <div class="icon-box green"><el-icon><User /></el-icon></div>
+              <div class="icon-box green"><el-icon>
+                  <User />
+                </el-icon></div>
               <span>加入申请</span>
             </div>
             <div class="quick-link-item">
-              <div class="icon-box purple"><el-icon><ChatDotRound /></el-icon></div>
+              <div class="icon-box purple"><el-icon>
+                  <ChatDotRound />
+                </el-icon></div>
               <span>我的消息</span>
             </div>
           </div>
