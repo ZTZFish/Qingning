@@ -3,44 +3,34 @@
 import prisma from "../prisma/client"; // 导入 Prisma Client 单例，确保全局唯一实例，避免连接池问题
 import { Role, Sex } from "@prisma/client";
 
-// 创建新用户（注册时调用）
-export const createUser = async (
-  username: string,
-  email: string,
-  password: string,
-  role: Role = Role.USER,
-  realName: string = "",
-  sex: Sex = Sex.UNKNOWN,
-  StudentId: number
-) => {
-  // 使用 prisma.user.create 创建用户记录
-  // data 对象包含所有要插入的字段：username、email、password（已加密）、role
+export const createUser = async (data: any) => {
   return await prisma.user.create({
-    data: {
-      username,
-      email,
-      password, // 这里传入的 password 应该是 bcrypt 加密后的
-      role,
-      realName,
-      sex,
-      StudentId,
+    data,
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      role: true,
+      avatar: true,
+      realName: true,
+      sex: true,
+      studentId: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 };
 
-// 根据用户名查找用户（登录时验证用户名是否存在）
 export const findUserByUsername = async (username: string) => {
-  // 使用 prisma.user.findUnique 查找唯一用户
-  // where 指定条件：username 匹配
   return await prisma.user.findUnique({
-    where: { username },
+    where: { username, isDeleted: false },
   });
 };
 
 // 根据学号查找用户（注册时检查学号唯一性）
-export const findUserByStudentId = async (StudentId: number) => {
+export const findUserByStudentId = async (studentId: number) => {
   return await prisma.user.findUnique({
-    where: { StudentId },
+    where: { studentId },
   });
 };
 
@@ -66,42 +56,39 @@ export const findUserById = async (id: number) => {
   });
 };
 
-// 获取所有用户（包括已封禁）
 export const findAllUsers = async (
   skip: number,
   take: number,
   search?: string
 ) => {
-  const where: any = {};
+  const where: any = { isDeleted: false };
+
   if (search) {
     where.OR = [
-      { username: { contains: search } }, // 移除 mode: 'insensitive' 因为 MySQL 默认不区分大小写，且 Prisma 对 MySQL 的 insensitive 支持有限
+      { username: { contains: search } },
       { realName: { contains: search } },
+      { email: { contains: search } },
     ];
-    // 尝试解析为数字，如果是数字则尝试匹配学号
-    const searchInt = parseInt(search, 10);
-    if (!isNaN(searchInt)) {
-      where.OR.push({ StudentId: { equals: searchInt } });
-    }
   }
 
   const [users, total] = await prisma.$transaction([
     prisma.user.findMany({
       where,
-      skip,
-      take,
       select: {
         id: true,
         username: true,
         email: true,
-        avatar: true,
         role: true,
+        avatar: true,
         realName: true,
         sex: true,
-        StudentId: true,
-        isDeleted: true,
+        studentId: true,
         createdAt: true,
+        updatedAt: true,
+        isDeleted: true,
       },
+      skip,
+      take,
       orderBy: { createdAt: "desc" },
     }),
     prisma.user.count({ where }),
@@ -110,19 +97,21 @@ export const findAllUsers = async (
   return { users, total };
 };
 
-// 更新用户信息
-export const updateUser = async (
-  id: number,
-  data: {
-    username?: string;
-    avatar?: string;
-    email?: string;
-    role?: Role;
-    isDeleted?: boolean;
-  }
-) => {
+export const updateUser = async (id: number, data: any) => {
   return await prisma.user.update({
     where: { id },
     data,
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      role: true,
+      avatar: true,
+      realName: true,
+      sex: true,
+      studentId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 };

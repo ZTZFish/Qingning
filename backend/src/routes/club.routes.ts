@@ -17,6 +17,7 @@ import {
   getClubMembers,
   getApplications,
   auditApplication,
+  updateClub,
 } from "../controllers/club.controller";
 import { authenticateJWT, checkRole } from "../middlewares/auth.middleware";
 import { createUploadMiddleware } from "../middlewares/upload.middleware";
@@ -56,6 +57,14 @@ router.post(
 // 2. 管理员专用路由
 // 获取待审批列表
 router.get("/pending", authenticateJWT, checkRole([Role.ADMIN]), getAuditList);
+
+// 更新社团信息 (负责人或管理员)
+router.put(
+  "/:id",
+  authenticateJWT,
+  checkRole([Role.LEADER, Role.ADMIN]),
+  updateClub
+);
 
 // 获取社团详情
 router.get("/:id", authenticateJWT, getClubDetail);

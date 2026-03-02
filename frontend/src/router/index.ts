@@ -97,6 +97,12 @@ const routes = [
         props: { mode: "managed" },
       },
       {
+        path: "club/:id/edit",
+        name: "club-edit",
+        component: () => import("@/views/leader/ClubEdit.vue"),
+        meta: { roles: [Role.LEADER, Role.ADMIN] },
+      },
+      {
         path: "activities",
         name: "leader-activities",
         component: () => import("@/views/admin/ActivityManagement.vue"),

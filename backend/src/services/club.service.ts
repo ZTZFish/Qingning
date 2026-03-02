@@ -23,6 +23,50 @@ import { updateUser, findUserById } from "../repositories/user.repository";
 import { deleteFile } from "../utils/file";
 import { formatDateTime } from "../utils/date";
 
+export const updateClubInfo = async (
+  userId: number,
+  clubId: number,
+  data: {
+    name?: string;
+    description?: string;
+    coverImage?: string;
+  }
+) => {
+  const club = await findClubById(clubId);
+  if (!club) {
+    throw new Error("社团不存在");
+  }
+
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new Error("用户不存在");
+  }
+
+  // 社团负责人或管理员可以编辑
+  if (club.leaderId !== userId && user.role !== Role.ADMIN) {
+    throw new Error("无权编辑社团信息");
+  }
+
+  // 如果修改了名称，检查是否重复
+  if (data.name && data.name !== club.name) {
+    const existingClub = await findClubByName(data.name);
+    if (existingClub) {
+      throw new Error("社团名称已存在");
+    }
+  }
+
+  // 如果上传了新封面，删除旧封面
+  if (
+    data.coverImage &&
+    club.coverImage &&
+    data.coverImage !== club.coverImage
+  ) {
+    deleteFile(club.coverImage);
+  }
+
+  return await updateClub(clubId, data);
+};
+
 export const getClubInfo = async (clubId: number, userId: number) => {
   const club = await findClubDetail(clubId);
   if (!club) {

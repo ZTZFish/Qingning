@@ -149,7 +149,7 @@ const handleRegister = async () => {
       role: registerForm.role,
       realName: registerForm.realName,
       sex: registerForm.sex,
-      StudentId: registerForm.StudentId
+      studentId: registerForm.StudentId
     })
 
     ElMessage.success('注册成功，请登录')

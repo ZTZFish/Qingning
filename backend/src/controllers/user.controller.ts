@@ -215,11 +215,21 @@ export const getProfile = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { username, avatar } = req.body;
-    await updateUserProfile(userId, { username, avatar });
+    const { username, email, realName, sex, studentId, avatar } = req.body;
+
+    const user = await updateUserProfile(userId, {
+      username,
+      email,
+      realName,
+      sex,
+      studentId: studentId ? parseInt(studentId, 10) : undefined,
+      avatar,
+    });
+
     res.status(200).json({
       code: 200,
       message: "更新成功",
+      data: user,
     });
   } catch (error: any) {
     res.status(400).json({ code: 400, message: error.message });

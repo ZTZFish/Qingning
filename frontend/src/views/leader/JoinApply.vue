@@ -33,7 +33,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="StudentId" label="学号" width="150" />
+          <el-table-column prop="studentId" label="学号" width="150" />
           <el-table-column prop="joinedAt" label="申请时间" width="180" />
           <el-table-column prop="notes" label="申请理由" min-width="200" />
           <el-table-column label="操作" width="180" fixed="right">

@@ -15,8 +15,32 @@ import {
   getMembers,
   getPendingApplications,
   auditMembership,
+  updateClubInfo,
 } from "../services/club.service";
 import { Status, MembershipStatus } from "@prisma/client";
+
+// 更新社团信息
+export const updateClub = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user.id;
+    const { name, description, coverImage } = req.body;
+
+    const updatedClub = await updateClubInfo(userId, parseInt(id, 10), {
+      name,
+      description,
+      coverImage,
+    });
+
+    res.status(200).json({
+      code: 200,
+      message: "更新成功",
+      data: updatedClub,
+    });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
 
 // 获取社团详情
 export const getClubDetail = async (req: Request, res: Response) => {

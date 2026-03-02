@@ -1,5 +1,5 @@
 import request from "@/utils/request";
-import type { Club, MembershipStatus, Status } from "@/types";
+import type { Club, Status, MembershipStatus } from "@/types";
 
 /**
  * 提交社团申请
@@ -164,4 +164,13 @@ export function auditClubApplication(
   status: "APPROVED" | "REJECTED"
 ) {
   return request.put(`/clubs/${clubId}/applications/${memberId}`, { status });
+}
+
+/**
+ * 更新社团信息
+ * @param id 社团ID
+ * @param data 更新数据
+ */
+export function updateClubInfo(id: number, data: any) {
+  return request.put(`/clubs/${id}`, data);
 }

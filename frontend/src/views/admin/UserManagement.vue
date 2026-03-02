@@ -136,8 +136,8 @@ const transferLoading = ref(false);
 const columns: Column[] = [
   { label: "头像", prop: "avatar", type: "avatar", width: "80" },
   { label: "用户名", prop: "username", minWidth: "120" },
-  { label: "真实姓名", prop: "realName", minWidth: "100" },
-  { label: "学号", prop: "StudentId", width: "120" },
+  { label: "真实姓名", prop: "realName", width: "120" },
+  { label: "学号", prop: "studentId", width: "120" },
   {
     label: "角色",
     prop: "role",
@@ -338,7 +338,7 @@ const handleViewDetail = (row: User) => {
       <p><strong>真实姓名:</strong> ${row.realName || "未设置"}</p>
       <p><strong>性别:</strong> ${row.sex === "MALE" ? "男" : row.sex === "FEMALE" ? "女" : "未知"
     }</p>
-      <p><strong>学号:</strong> ${row.StudentId || "未设置"}</p>
+      <p><strong>学号:</strong> ${row.studentId || "未设置"}</p>
       <p><strong>注册时间:</strong> ${new Date(
       row.createdAt
     ).toLocaleString()}</p>

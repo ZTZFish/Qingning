@@ -50,12 +50,12 @@
               <p>{{ club.description || "暂无简介" }}</p>
             </div>
             <div class="club-actions">
-              <!-- 负责人操作 -->
-              <template v-if="isLeader">
+              <!-- 负责人或管理员操作 -->
+              <template v-if="isLeader || isAdmin">
                 <el-button type="primary" @click="handleEdit">
                   编辑社团信息
                 </el-button>
-                <el-button type="primary" plain @click="handleAddActivity">
+                <el-button v-if="isLeader" type="primary" plain @click="handleAddActivity">
                   发布活动
                 </el-button>
               </template>
@@ -179,6 +179,10 @@ const isLeader = computed(() => {
   return userStore.user?.id === club.value?.leaderId;
 });
 
+const isAdmin = computed(() => {
+  return userStore.user?.role === "ADMIN";
+});
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, "");
 
 const getFullUrl = (path?: string) => {
@@ -291,8 +295,7 @@ const handleLeave = async () => {
 };
 
 const handleEdit = () => {
-  ElMessage.info("功能开发中");
-  // router.push(`/leader/club/${clubId}/edit`);
+  router.push(`/leader/club/${clubId}/edit`);
 };
 
 const handleAddActivity = () => {

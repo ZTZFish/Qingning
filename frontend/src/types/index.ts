@@ -83,7 +83,7 @@ export interface User {
   avatar?: string | null;
   realName?: string;
   sex?: Sex;
-  StudentId?: number;
+  studentId?: number;
   createdAt: string;
   updatedAt?: string;
   isDeleted?: boolean;

@@ -38,7 +38,7 @@ export const registerUser = async (
   code: string,
   realName: string,
   sex: Sex,
-  StudentId: number
+  studentId: number
 ) => {
   // 1. 验证验证码
   await verifyCode(email, code);
@@ -55,25 +55,27 @@ export const registerUser = async (
     throw new Error("该邮箱已被注册");
   }
 
-  // 检查 StudentId 是否已存在
-  const existingStudentId = await findUserByStudentId(StudentId);
-  if (existingStudentId) {
-    throw new Error("该学号已被注册");
+  // 检查 studentId 是否已存在
+  if (studentId) {
+    const existingStudentId = await findUserByStudentId(studentId);
+    if (existingStudentId) {
+      throw new Error("该学号已被注册");
+    }
   }
 
   // 使用 bcrypt.hash 加密密码，SALT_ROUNDS 指定加密强度
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
   // 调用 repository 创建用户，传入加密后的密码
-  const newUser = await createUser(
+  const newUser = await createUser({
     username,
     email,
-    hashedPassword,
-    Role.USER,
+    password: hashedPassword,
+    role: Role.USER,
     realName,
     sex,
-    StudentId
-  );
+    studentId,
+  });
 
   // 返回新用户（但不返回密码，安全考虑）
   return {
@@ -83,7 +85,7 @@ export const registerUser = async (
     role: newUser.role,
     realName: newUser.realName,
     sex: newUser.sex,
-    StudentId: newUser.StudentId,
+    studentId: newUser.studentId,
   };
 };
 
@@ -186,23 +188,39 @@ export const getUserProfile = async (userId: number) => {
     avatar: user.avatar,
     realName: user.realName,
     sex: user.sex,
-    StudentId: user.StudentId,
+    studentId: user.studentId,
   };
 };
 
 // 更新用户个人资料
 export const updateUserProfile = async (
   userId: number,
-  data: { username?: string; avatar?: string }
+  data: {
+    username?: string;
+    email?: string;
+    realName?: string;
+    sex?: Sex;
+    studentId?: number;
+    avatar?: string;
+  }
 ) => {
+  const updateData: any = {};
+
   if (data.username) {
     const existingUser = await findUserByUsername(data.username);
     if (existingUser && existingUser.id !== userId) {
       throw new Error("用户名已存在");
     }
+    updateData.username = data.username;
   }
 
-  return await updateUser(userId, data);
+  if (data.email) updateData.email = data.email;
+  if (data.realName) updateData.realName = data.realName;
+  if (data.sex) updateData.sex = data.sex;
+  if (data.studentId) updateData.studentId = data.studentId;
+  if (data.avatar) updateData.avatar = data.avatar;
+
+  return await updateUser(userId, updateData);
 };
 
 // 更新用户邮箱
