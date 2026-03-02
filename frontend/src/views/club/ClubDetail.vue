@@ -42,7 +42,7 @@
               </div>
               <div class="meta-item">
                 <el-icon><UserFilled /></el-icon>
-                <span>成员：{{ (club._count?.members || 0) + 1 }} 人</span>
+                <span>成员：{{ club.memberCount ?? club._count?.members ?? 0 }} 人</span>
               </div>
             </div>
             <div class="club-description">
@@ -127,6 +127,16 @@
                   <el-tag v-else type="info">成员</el-tag>
                 </template>
               </el-table-column>
+              <el-table-column v-if="isLeader || isAdmin" label="操作" width="120" fixed="right">
+                <template #default="{ row }">
+                  <el-button
+                    v-if="row.id !== club.leaderId"
+                    type="danger"
+                    link
+                    @click="handleRemove(row)"
+                  >移出</el-button>
+                </template>
+              </el-table-column>
             </el-table>
             <div class="pagination-wrapper" v-if="membersTotal > 0">
               <el-pagination
@@ -156,6 +166,7 @@ import {
   joinClub,
   leaveClub,
   getClubMembers,
+  removeClubMember,
 } from "@/api/club";
 import { ClubType, MembershipStatus } from "@/types";
 
@@ -300,6 +311,23 @@ const handleEdit = () => {
 
 const handleAddActivity = () => {
   router.push("/leader/add-activity");
+};
+
+const handleRemove = async (row: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定将成员“${row.realName || row.username}”移出社团吗？`,
+      "提示",
+      { type: "warning" }
+    );
+    await removeClubMember(clubId, row.id);
+    ElMessage.success("已移出成员");
+    fetchMembers();
+  } catch (error: any) {
+    if (error !== "cancel") {
+      ElMessage.error(error.message || "操作失败");
+    }
+  }
 };
 
 onMounted(() => {

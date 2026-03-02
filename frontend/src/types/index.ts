@@ -108,6 +108,7 @@ export interface Club {
   createdAt: string;
   updatedAt: string;
   isDeleted: boolean;
+  memberCount?: number;
   // 关联字段
   leader?: User;
   members?: ClubMembership[];

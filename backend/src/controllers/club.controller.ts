@@ -16,6 +16,7 @@ import {
   getPendingApplications,
   auditMembership,
   updateClubInfo,
+  removeClubMember,
 } from "../services/club.service";
 import { Status, MembershipStatus } from "@prisma/client";
 
@@ -37,6 +38,22 @@ export const updateClub = async (req: Request, res: Response) => {
       message: "更新成功",
       data: updatedClub,
     });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
+// 移出社团成员（负责人或管理员）
+export const removeMember = async (req: Request, res: Response) => {
+  try {
+    const { id, memberId } = req.params;
+    const operatorId = (req as any).user.id;
+    await removeClubMember(
+      operatorId,
+      parseInt(id, 10),
+      parseInt(memberId, 10)
+    );
+    res.status(200).json({ code: 200, message: "已移出成员" });
   } catch (error: any) {
     res.status(400).json({ code: 400, message: error.message });
   }

@@ -86,7 +86,7 @@ const randomGradient = computed(() => {
             <el-icon>
               <User />
             </el-icon>
-            <span>{{ (club._count?.members || 0) + 1 }} 人</span>
+            <span>{{ club.memberCount ?? club._count?.members ?? 0 }} 人</span>
           </div>
           <div class="meta-item">
             <el-icon>

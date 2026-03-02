@@ -195,6 +195,48 @@ export const updateMembershipStatus = async (
   });
 };
 
+export const countApprovedMembersByClubIds = async (clubIds: number[]) => {
+  if (!clubIds.length) return {};
+
+  const rows = await prisma.clubMembership.groupBy({
+    by: ["clubId"],
+    where: {
+      clubId: { in: clubIds },
+      status: MembershipStatus.APPROVED,
+    },
+    _count: {
+      _all: true,
+    },
+  });
+
+  const result: Record<number, number> = {};
+  for (const row of rows) {
+    result[row.clubId] = row._count._all;
+  }
+  return result;
+};
+
+export const findApprovedLeaderMembershipClubIds = async (
+  pairs: Array<{ clubId: number; leaderId: number }>
+) => {
+  if (!pairs.length) return [];
+
+  const rows = await prisma.clubMembership.findMany({
+    where: {
+      OR: pairs.map((p) => ({
+        clubId: p.clubId,
+        userId: p.leaderId,
+        status: MembershipStatus.APPROVED,
+      })),
+    },
+    select: {
+      clubId: true,
+    },
+  });
+
+  return rows.map((r) => r.clubId);
+};
+
 export const findClubsByLeaderId = async (leaderId: number) => {
   return await prisma.club.findMany({
     where: { leaderId, isDeleted: false },

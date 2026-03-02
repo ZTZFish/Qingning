@@ -18,6 +18,7 @@ import {
   getApplications,
   auditApplication,
   updateClub,
+  removeMember,
 } from "../controllers/club.controller";
 import { authenticateJWT, checkRole } from "../middlewares/auth.middleware";
 import { createUploadMiddleware } from "../middlewares/upload.middleware";
@@ -77,6 +78,14 @@ router.post("/:id/leave", authenticateJWT, leave);
 
 // 获取社团成员
 router.get("/:id/members", authenticateJWT, getClubMembers);
+
+// 移出社团成员 (负责人或管理员)
+router.delete(
+  "/:id/members/:memberId",
+  authenticateJWT,
+  checkRole([Role.LEADER, Role.ADMIN]),
+  removeMember
+);
 
 // 获取入社申请列表 (负责人)
 router.get(

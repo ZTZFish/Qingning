@@ -18,10 +18,29 @@ import {
   createLeaderMembership,
   findPendingMemberships,
   updateMembershipStatus,
+  countApprovedMembersByClubIds,
+  findApprovedLeaderMembershipClubIds,
 } from "../repositories/club.repository";
 import { updateUser, findUserById } from "../repositories/user.repository";
 import { deleteFile } from "../utils/file";
 import { formatDateTime } from "../utils/date";
+
+const attachMemberCount = async <T extends { id: number; leaderId: number }>(
+  clubs: T[]
+) => {
+  const clubIds = clubs.map((c) => c.id);
+  const approvedCounts = await countApprovedMembersByClubIds(clubIds);
+  const approvedLeaderClubIds = await findApprovedLeaderMembershipClubIds(
+    clubs.map((c) => ({ clubId: c.id, leaderId: c.leaderId }))
+  );
+  const approvedLeaderSet = new Set(approvedLeaderClubIds);
+
+  return clubs.map((c) => ({
+    ...c,
+    memberCount:
+      (approvedCounts[c.id] || 0) + (approvedLeaderSet.has(c.id) ? 0 : 1),
+  }));
+};
 
 export const updateClubInfo = async (
   userId: number,
@@ -78,12 +97,18 @@ export const getClubInfo = async (clubId: number, userId: number) => {
   const isMember = !!membership;
   const membershipStatus = membership?.status;
 
+  const approvedCounts = await countApprovedMembersByClubIds([clubId]);
+  const leaderMembership = await findMembership(club.leaderId, clubId);
+  const leaderApproved = leaderMembership?.status === MembershipStatus.APPROVED;
+  const memberCount = (approvedCounts[clubId] || 0) + (leaderApproved ? 0 : 1);
+
   return {
     ...club,
     createdAt: formatDateTime(club.createdAt),
     updatedAt: formatDateTime(club.updatedAt),
     isMember,
     membershipStatus,
+    memberCount,
   };
 };
 
@@ -117,6 +142,33 @@ export const leaveClub = async (userId: number, clubId: number) => {
   }
 
   return await deleteMembership(userId, clubId);
+};
+
+export const removeClubMember = async (
+  operatorId: number,
+  clubId: number,
+  memberId: number
+) => {
+  const club = await findClubById(clubId);
+  if (!club) {
+    throw new Error("社团不存在");
+  }
+  const operator = await findUserById(operatorId);
+  if (!operator) {
+    throw new Error("用户不存在");
+  }
+  if (memberId === club.leaderId) {
+    throw new Error("不能移除社团负责人");
+  }
+  if (club.leaderId !== operatorId && operator.role !== Role.ADMIN) {
+    throw new Error("无权移除成员");
+  }
+  const membership = await findMembership(memberId, clubId);
+  if (!membership || membership.status !== MembershipStatus.APPROVED) {
+    throw new Error("该成员不在社团或未通过审批");
+  }
+  await deleteMembership(memberId, clubId);
+  return { success: true };
 };
 
 export const getPendingApplications = async (
@@ -351,9 +403,10 @@ export const getAllClubs = async (
     createdAt: formatDateTime(club.createdAt),
     updatedAt: formatDateTime(club.updatedAt),
   }));
+  const clubsWithMemberCount = await attachMemberCount(formattedClubs);
 
   return {
-    list: formattedClubs,
+    list: clubsWithMemberCount,
     total,
     page,
     pageSize,
@@ -371,7 +424,7 @@ export const getApprovedClubs = async () => {
     updatedAt: formatDateTime(club.updatedAt),
   }));
 
-  return formattedClubs;
+  return await attachMemberCount(formattedClubs);
 };
 
 export const getUserLedClubs = async (userId: number) => {
@@ -384,7 +437,7 @@ export const getUserLedClubs = async (userId: number) => {
     updatedAt: formatDateTime(club.updatedAt),
   }));
 
-  return formattedClubs;
+  return await attachMemberCount(formattedClubs);
 };
 
 export const getUserJoinedClubs = async (
@@ -402,9 +455,10 @@ export const getUserJoinedClubs = async (
     createdAt: formatDateTime(club.createdAt),
     updatedAt: formatDateTime(club.updatedAt),
   }));
+  const listWithMemberCount = await attachMemberCount(list);
 
   return {
-    list,
+    list: listWithMemberCount,
     total,
     page,
     pageSize,

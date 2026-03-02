@@ -138,6 +138,15 @@ export function getClubMembers(
 }
 
 /**
+ * 移出社团成员
+ * @param clubId 社团ID
+ * @param memberId 成员用户ID
+ */
+export function removeClubMember(clubId: number, memberId: number) {
+  return request.delete(`/clubs/${clubId}/members/${memberId}`);
+}
+
+/**
  * 获取入社申请列表
  * @param id 社团ID
  * @param params 分页参数
