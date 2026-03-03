@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { User, Avatar } from '@element-plus/icons-vue'
+import { User, Avatar, Calendar } from '@element-plus/icons-vue'
 import { type Club, ClubType } from '@/types'
 
 const props = defineProps<{
@@ -54,6 +54,24 @@ const randomGradient = computed(() => {
   ]
   return gradients[props.club.id % gradients.length]
 })
+
+const activityList = computed(() => {
+  const list = (props.club as any).activities || []
+  if (!Array.isArray(list)) return []
+  return list
+    .slice()
+    .sort((a: any, b: any) => {
+      const t1 = new Date(a.date).getTime()
+      const t2 = new Date(b.date).getTime()
+      return t2 - t1
+    })
+    .slice(0, 1)
+})
+
+const formatActivityTime = (value?: string) => {
+  if (!value) return ''
+  return value.length >= 16 ? value.slice(0, 16) : value
+}
 </script>
 
 <template>
@@ -78,6 +96,20 @@ const randomGradient = computed(() => {
       <div class="club-info">
         <h3 class="club-name">{{ club.name }}</h3>
         <p class="club-desc">{{ truncatedDescription }}</p>
+      </div>
+
+      <div class="club-activities">
+        <div class="activities-title">社团活动</div>
+        <div v-if="activityList.length === 0" class="activities-empty">暂无活动</div>
+        <div v-else class="activities-list">
+          <div v-for="a in activityList" :key="a.id" class="activity-item">
+            <div class="activity-name">{{ a.name }}</div>
+            <div class="activity-time">
+              <el-icon><Calendar /></el-icon>
+              <span>{{ formatActivityTime(a.date) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="club-meta">
@@ -190,6 +222,57 @@ const randomGradient = computed(() => {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.club-activities {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.activities-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 8px;
+}
+
+.activities-empty {
+  font-size: 12px;
+  color: #909399;
+}
+
+.activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.activity-name {
+  font-size: 12px;
+  color: #606266;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.activity-time .el-icon {
+  font-size: 14px;
 }
 
 .club-meta {

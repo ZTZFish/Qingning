@@ -44,7 +44,7 @@ const routes = [
       {
         path: "admin/activities",
         name: "admin-activities",
-        component: () => import("../views/admin/ActivityManagement.vue"),
+        component: () => import("@/views/activity/ActivityList.vue"),
         meta: { roles: [Role.ADMIN], title: "活动管理 - 青柠社团管理系统" },
       },
       {
@@ -78,6 +78,11 @@ const routes = [
         component: () => import("@/views/activity/ActivityList.vue"),
       },
       {
+        path: "activities/:id",
+        name: "activity-detail",
+        component: () => import("@/views/activity/ActivityDetail.vue"),
+      },
+      {
         path: "create-club",
         name: "create-club",
         component: () => import("@/views/user/CreateClub.vue"),
@@ -105,7 +110,7 @@ const routes = [
       {
         path: "activities",
         name: "leader-activities",
-        component: () => import("@/views/admin/ActivityManagement.vue"),
+        component: () => import("@/views/activity/ActivityList.vue"),
       },
       {
         path: "join-apply",
@@ -115,7 +120,12 @@ const routes = [
       {
         path: "add-activity",
         name: "add-activity",
-        component: () => import("@/views/admin/ActivityManagement.vue"), // 暂时复用，之后应该替换为 CreateActivity.vue
+        component: () => import("@/views/leader/CreateActivity.vue"),
+      },
+      {
+        path: "activity-enrollments",
+        name: "activity-enrollments",
+        component: () => import("@/views/leader/EnrollmentAudit.vue"),
       },
     ],
   },

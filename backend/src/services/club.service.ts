@@ -1,6 +1,6 @@
 // src/services/club.service.ts
 
-import { ClubType, Status, Role, MembershipStatus } from "@prisma/client";
+import { ClubType, Status, Role, MembershipStatus, ActivityStatus } from "@prisma/client";
 import {
   createClub,
   findClubByName,
@@ -39,6 +39,36 @@ const attachMemberCount = async <T extends { id: number; leaderId: number }>(
     ...c,
     memberCount:
       (approvedCounts[c.id] || 0) + (approvedLeaderSet.has(c.id) ? 0 : 1),
+  }));
+};
+
+const deriveActivityStatus = (
+  status: ActivityStatus,
+  date: Date,
+  endAt: Date
+): ActivityStatus => {
+  if (status === ActivityStatus.APPROVED) {
+    const now = new Date();
+    if (now >= endAt) return ActivityStatus.FINISHED;
+    if (now >= date) return ActivityStatus.ONGOING;
+    return ActivityStatus.APPROVED;
+  }
+  return status;
+};
+
+const attachActivityPreviews = <T extends { activities?: any[] }>(clubs: T[]) => {
+  return clubs.map((club: any) => ({
+    ...club,
+    activities: Array.isArray(club.activities)
+      ? club.activities.map((a: any) => ({
+          ...a,
+          status: deriveActivityStatus(a.status, a.date, a.endAt),
+          date: formatDateTime(a.date),
+          endAt: formatDateTime(a.endAt),
+          createdAt: formatDateTime(a.createdAt),
+          updatedAt: formatDateTime(a.updatedAt),
+        }))
+      : club.activities,
   }));
 };
 
@@ -102,6 +132,17 @@ export const getClubInfo = async (clubId: number, userId: number) => {
   const leaderApproved = leaderMembership?.status === MembershipStatus.APPROVED;
   const memberCount = (approvedCounts[clubId] || 0) + (leaderApproved ? 0 : 1);
 
+  const activities = Array.isArray((club as any).activities)
+    ? (club as any).activities.map((a: any) => ({
+        ...a,
+        status: deriveActivityStatus(a.status, a.date, a.endAt),
+        date: formatDateTime(a.date),
+        endAt: formatDateTime(a.endAt),
+        createdAt: formatDateTime(a.createdAt),
+        updatedAt: formatDateTime(a.updatedAt),
+      }))
+    : (club as any).activities;
+
   return {
     ...club,
     createdAt: formatDateTime(club.createdAt),
@@ -109,6 +150,7 @@ export const getClubInfo = async (clubId: number, userId: number) => {
     isMember,
     membershipStatus,
     memberCount,
+    activities,
   };
 };
 
@@ -404,9 +446,10 @@ export const getAllClubs = async (
     updatedAt: formatDateTime(club.updatedAt),
   }));
   const clubsWithMemberCount = await attachMemberCount(formattedClubs);
+  const clubsWithActivities = attachActivityPreviews(clubsWithMemberCount as any);
 
   return {
-    list: clubsWithMemberCount,
+    list: clubsWithActivities,
     total,
     page,
     pageSize,
@@ -424,7 +467,8 @@ export const getApprovedClubs = async () => {
     updatedAt: formatDateTime(club.updatedAt),
   }));
 
-  return await attachMemberCount(formattedClubs);
+  const clubsWithMemberCount = await attachMemberCount(formattedClubs);
+  return attachActivityPreviews(clubsWithMemberCount as any);
 };
 
 export const getUserLedClubs = async (userId: number) => {
@@ -437,7 +481,8 @@ export const getUserLedClubs = async (userId: number) => {
     updatedAt: formatDateTime(club.updatedAt),
   }));
 
-  return await attachMemberCount(formattedClubs);
+  const clubsWithMemberCount = await attachMemberCount(formattedClubs);
+  return attachActivityPreviews(clubsWithMemberCount as any);
 };
 
 export const getUserJoinedClubs = async (
@@ -456,9 +501,10 @@ export const getUserJoinedClubs = async (
     updatedAt: formatDateTime(club.updatedAt),
   }));
   const listWithMemberCount = await attachMemberCount(list);
+  const listWithActivities = attachActivityPreviews(listWithMemberCount as any);
 
   return {
-    list: listWithMemberCount,
+    list: listWithActivities,
     total,
     page,
     pageSize,

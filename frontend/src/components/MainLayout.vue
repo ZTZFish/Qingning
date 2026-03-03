@@ -48,6 +48,7 @@ const menuItems = computed(() => {
       { id: 'club-manage', label: '社团管理', icon: Management, path: '/leader/club' },
       { id: 'activity-manage', label: '活动管理', icon: List, path: '/leader/activities' },
       { id: 'join-apply', label: '入社申请', icon: User, path: '/leader/join-apply' },
+      { id: 'activity-enrollments', label: '活动录取', icon: Calendar, path: '/leader/activity-enrollments' }
     ]
   } else {
     // 普通用户菜单

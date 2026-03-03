@@ -152,6 +152,7 @@ model Activity {
 
   createdAt   DateTime        @default(now())                   // 创建时间
   updatedAt   DateTime        @updatedAt                        // 最后修改时间
+  isDeleted   Boolean         @default(false)
 
   // 关系
   club          Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)

@@ -101,7 +101,7 @@ const fetchClubInfo = async () => {
     const res = await getClubDetail(clubId);
     form.value = {
       name: res.name,
-      description: res.description,
+      description: res.description || "",
       coverImage: res.coverImage || "",
     };
   } catch (error: any) {

@@ -1,7 +1,12 @@
 // src/repositories/club.repository.ts
 
 import prisma from "../prisma/client";
-import { ClubType, Status, MembershipStatus } from "@prisma/client";
+import {
+  ClubType,
+  Status,
+  MembershipStatus,
+  ActivityStatus,
+} from "@prisma/client";
 
 export const createClub = async (data: {
   name: string;
@@ -35,6 +40,7 @@ export const findClubById = async (id: number) => {
           realName: true,
           avatar: true,
           role: true,
+          sex: true,
         },
       },
     },
@@ -58,10 +64,38 @@ export const findClubDetail = async (id: number) => {
           realName: true,
           avatar: true,
           role: true,
+          sex: true,
         },
       },
       _count: {
         select: { members: true },
+      },
+      activities: {
+        where: {
+          isDeleted: false,
+          status: {
+            in: [
+              ActivityStatus.APPROVED,
+              ActivityStatus.ONGOING,
+              ActivityStatus.FINISHED,
+            ],
+          },
+        },
+        orderBy: { date: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          clubId: true,
+          name: true,
+          description: true,
+          coverImage: true,
+          date: true,
+          endAt: true,
+          location: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       },
     },
   });
@@ -253,6 +287,33 @@ export const findClubsByLeaderId = async (leaderId: number) => {
       _count: {
         select: { members: true },
       },
+      activities: {
+        where: {
+          isDeleted: false,
+          status: {
+            in: [
+              ActivityStatus.APPROVED,
+              ActivityStatus.ONGOING,
+              ActivityStatus.FINISHED,
+            ],
+          },
+        },
+        orderBy: { date: "desc" },
+        take: 3,
+        select: {
+          id: true,
+          clubId: true,
+          name: true,
+          description: true,
+          coverImage: true,
+          date: true,
+          endAt: true,
+          location: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -278,6 +339,33 @@ export const findClubsByStatus = async (
         },
         _count: {
           select: { members: true },
+        },
+        activities: {
+          where: {
+            isDeleted: false,
+            status: {
+              in: [
+                ActivityStatus.APPROVED,
+                ActivityStatus.ONGOING,
+                ActivityStatus.FINISHED,
+              ],
+            },
+          },
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            clubId: true,
+            name: true,
+            description: true,
+            coverImage: true,
+            date: true,
+            endAt: true,
+            location: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -319,6 +407,33 @@ export const findClubsByMemberId = async (
         },
         _count: {
           select: { members: true },
+        },
+        activities: {
+          where: {
+            isDeleted: false,
+            status: {
+              in: [
+                ActivityStatus.APPROVED,
+                ActivityStatus.ONGOING,
+                ActivityStatus.FINISHED,
+              ],
+            },
+          },
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            clubId: true,
+            name: true,
+            description: true,
+            coverImage: true,
+            date: true,
+            endAt: true,
+            location: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -369,6 +484,33 @@ export const findAllClubs = async (
         },
         _count: {
           select: { members: true },
+        },
+        activities: {
+          where: {
+            isDeleted: false,
+            status: {
+              in: [
+                ActivityStatus.APPROVED,
+                ActivityStatus.ONGOING,
+                ActivityStatus.FINISHED,
+              ],
+            },
+          },
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            clubId: true,
+            name: true,
+            description: true,
+            coverImage: true,
+            date: true,
+            endAt: true,
+            location: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         },
       },
       orderBy: { createdAt: "desc" },

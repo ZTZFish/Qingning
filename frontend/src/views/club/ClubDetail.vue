@@ -106,8 +106,24 @@
       <el-tabs v-model="activeTab" class="club-tabs" type="border-card">
         <el-tab-pane label="社团活动" name="activities">
           <div class="tab-content">
-            <!-- 这里可以复用 ActivityList 组件，或者简单的列表 -->
-            <el-empty description="暂无活动" />
+            <template v-if="Array.isArray(club.activities) && club.activities.length">
+              <el-table 
+                :data="sortedActivities" 
+                style="width: 100%; cursor: pointer" 
+                @row-click="handleActivityClick"
+                highlight-current-row
+              >
+                <el-table-column prop="name" label="活动名称" min-width="180" />
+                <el-table-column prop="date" label="开始时间" width="180" />
+                <el-table-column prop="endAt" label="结束时间" width="180" />
+                <el-table-column label="状态" width="120">
+                  <template #default="{ row }">
+                    <el-tag :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </template>
+            <el-empty v-else description="暂无活动" />
           </div>
         </el-tab-pane>
         <el-tab-pane label="社团成员" name="members">
@@ -169,6 +185,7 @@ import {
   removeClubMember,
 } from "@/api/club";
 import { ClubType, MembershipStatus } from "@/types";
+import { ActivityStatus } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
@@ -207,6 +224,44 @@ const getAvatarUrl = (path?: string) => {
     return "https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png";
   if (path.startsWith("http")) return path;
   return `${BASE_URL}${path}`;
+};
+
+const sortedActivities = computed(() => {
+  const list = (club.value?.activities || []) as any[];
+  return list
+    .slice()
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+});
+
+const statusLabel = (status: string) => {
+  const map: Record<string, string> = {
+    [ActivityStatus.DRAFT]: "草稿",
+    [ActivityStatus.PENDING]: "待审核",
+    [ActivityStatus.APPROVED]: "已发布",
+    [ActivityStatus.REJECTED]: "已拒绝",
+    [ActivityStatus.ONGOING]: "进行中",
+    [ActivityStatus.FINISHED]: "已结束",
+    [ActivityStatus.CANCELED]: "已取消",
+  };
+  return map[status] || status;
+};
+
+const statusTagType = (status: string) => {
+  const map: Record<string, any> = {
+    [ActivityStatus.DRAFT]: "info",
+    [ActivityStatus.PENDING]: "warning",
+    [ActivityStatus.APPROVED]: "success",
+    [ActivityStatus.REJECTED]: "danger",
+    [ActivityStatus.ONGOING]: "primary",
+    [ActivityStatus.FINISHED]: "info",
+    [ActivityStatus.CANCELED]: "danger",
+  };
+  return map[status] || "info";
+};
+
+const handleActivityClick = (row: any) => {
+  router.push(`/activities/${row.id}`);
 };
 
 // 社团类型映射
