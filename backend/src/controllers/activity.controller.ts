@@ -190,11 +190,19 @@ export const getEnrollmentListController = async (
     const { id } = req.params;
     const page = parseInt(req.query.page as string, 10) || 1;
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
+
+    // 显式转换 query 参数
+    const publicQuery = req.query.public as string;
+    const statusQuery = req.query.status as string;
+
     // 如果是 public 视图，强制 status 为 APPROVED，否则使用 query 中的 status
-    const publicView = req.query.public === "true";
+    const publicView = publicQuery === "true";
+
+    // 再次强制逻辑：如果是 publicView，不管 statusQuery 是什么，都应该是 APPROVED
+    // 如果不是 publicView，则使用 statusQuery 转换
     const status = publicView
       ? ParticipationStatus.APPROVED
-      : (req.query.status as ParticipationStatus | undefined);
+      : (statusQuery as ParticipationStatus | undefined);
 
     const result = await getActivityEnrollments(
       operatorId,

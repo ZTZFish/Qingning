@@ -74,7 +74,12 @@ export function getAdmittedMembers(id: number) {
   return request.get<{ list: any[]; total: number }>(
     `/activities/${id}/admitted`,
     {
-      params: { page: 1, pageSize: 100 },
+      params: {
+        page: 1,
+        pageSize: 100,
+        public: "true",
+        status: "APPROVED",
+      },
     }
   );
 }

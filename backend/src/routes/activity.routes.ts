@@ -74,17 +74,7 @@ router.put(
 router.post("/:id/enroll", authenticateJWT, enrollActivityController);
 
 // 获取活动已录取名单（公开）
-router.get(
-  "/:id/admitted",
-  authenticateJWT,
-  (req, res, next) => {
-    // 强制设置 query 参数，确保 controller 能读到
-    req.query.public = 'true';
-    req.query.status = 'APPROVED'; // 显式设置 status 为 APPROVED
-    next();
-  },
-  getEnrollmentListController
-);
+router.get("/:id/admitted", authenticateJWT, getEnrollmentListController);
 
 // 负责人获取报名名单
 router.get(

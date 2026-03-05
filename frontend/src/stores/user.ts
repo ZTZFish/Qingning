@@ -31,7 +31,6 @@ export const useUserStore = defineStore("user", () => {
       const res = await getUserInfo();
       if (res) {
         user.value = res;
-        console.log("用户信息:", res);
         return res;
       }
     } catch (error) {
