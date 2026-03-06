@@ -197,7 +197,39 @@ export const findAllActivities = async (
   }
 
   if (statuses && statuses.length > 0) {
-    where.status = { in: statuses };
+    const now = new Date();
+    const unique = Array.from(new Set(statuses));
+    const or: any[] = [];
+
+    for (const s of unique) {
+      if (s === ActivityStatus.ONGOING) {
+        or.push({
+          status: ActivityStatus.APPROVED,
+          date: { lte: now },
+          endAt: { gt: now },
+        });
+        continue;
+      }
+      if (s === ActivityStatus.FINISHED) {
+        or.push({
+          status: ActivityStatus.APPROVED,
+          endAt: { lte: now },
+        });
+        or.push({ status: ActivityStatus.FINISHED });
+        continue;
+      }
+      if (s === ActivityStatus.APPROVED) {
+        or.push({
+          status: ActivityStatus.APPROVED,
+          date: { gt: now },
+        });
+        continue;
+      }
+      or.push({ status: s });
+    }
+
+    where.AND = where.AND || [];
+    where.AND.push({ OR: or });
   }
 
   const [activities, total] = await prisma.$transaction([

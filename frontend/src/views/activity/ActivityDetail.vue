@@ -174,45 +174,61 @@ const isLeader = computed(() => {
   return activity.value.club?.leaderId === userStore.user.id;
 });
 
+const displayStatus = computed(() => {
+  if (!activity.value) return "";
+  if (activity.value.status === ActivityStatus.APPROVED) {
+    const now = new Date().getTime();
+    const start = new Date(activity.value.date).getTime();
+    const end = new Date(activity.value.endAt).getTime();
+
+    if (now < start) return ActivityStatus.APPROVED; // Upcoming
+    if (now >= start && now < end) return ActivityStatus.ONGOING; // Ongoing
+    if (now >= end) return ActivityStatus.FINISHED; // Finished
+  }
+  return activity.value.status;
+});
+
 const statusTagType = computed(() => {
   const map: any = {
-    APPROVED: "success",
-    ONGOING: "primary",
-    FINISHED: "info",
-    CANCELED: "danger",
-    PENDING: "warning",
-    REJECTED: "danger",
-    DRAFT: "info"
+    [ActivityStatus.APPROVED]: "success",
+    [ActivityStatus.ONGOING]: "primary",
+    [ActivityStatus.FINISHED]: "info",
+    [ActivityStatus.CANCELED]: "danger",
+    [ActivityStatus.PENDING]: "warning",
+    [ActivityStatus.REJECTED]: "danger",
+    [ActivityStatus.DRAFT]: "info"
   };
-  return map[activity.value?.status] || "info";
+  return map[displayStatus.value] || "info";
 });
 
 const statusText = computed(() => {
   const map: any = {
-    APPROVED: "即将开始", // 已发布但未开始
-    ONGOING: "进行中",
-    FINISHED: "已结束",
-    CANCELED: "已取消",
-    PENDING: "待审核",
-    REJECTED: "已拒绝",
-    DRAFT: "草稿"
+    [ActivityStatus.APPROVED]: "即将开始", // 已发布但未开始
+    [ActivityStatus.ONGOING]: "进行中",
+    [ActivityStatus.FINISHED]: "已结束",
+    [ActivityStatus.CANCELED]: "已取消",
+    [ActivityStatus.PENDING]: "待审核",
+    [ActivityStatus.REJECTED]: "已拒绝",
+    [ActivityStatus.DRAFT]: "草稿"
   };
-  return map[activity.value?.status] || "未知状态";
+  return map[displayStatus.value] || "未知状态";
 });
 
 const canEnroll = computed(() => {
   if (!activity.value) return false;
   // 只有“即将开始”或“进行中”可以报名
+  const status = displayStatus.value;
   return (
-    activity.value.status === ActivityStatus.APPROVED ||
-    activity.value.status === ActivityStatus.ONGOING
+    status === ActivityStatus.APPROVED ||
+    status === ActivityStatus.ONGOING
   );
 });
 
 const enrollButtonText = computed(() => {
   if (!canEnroll.value) {
-    if (activity.value?.status === ActivityStatus.FINISHED) return "活动已结束";
-    if (activity.value?.status === ActivityStatus.CANCELED) return "活动已取消";
+    const status = displayStatus.value;
+    if (status === ActivityStatus.FINISHED) return "活动已结束";
+    if (status === ActivityStatus.CANCELED) return "活动已取消";
     return "不可报名";
   }
   return "立即报名";

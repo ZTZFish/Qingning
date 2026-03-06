@@ -13,6 +13,7 @@ import ClubCard from '@/components/ClubCard.vue'
 import { type Club } from '@/types'
 import { ElMessage } from 'element-plus'
 import { getClubs } from '@/api/club'
+import { getActivities } from '@/api/activity'
 
 const router = useRouter()
 
@@ -23,32 +24,7 @@ const banners = [
   { id: 3, title: '计算机社：AI技术分享会', sub: '探索人工智能的无限可能', color: '#409EFF' },
 ]
 
-const activities = [
-  {
-    id: 1,
-    title: '校园马拉松',
-    date: '2024-03-20',
-    location: '操场',
-    club: '跑步协会',
-    image: 'linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)'
-  },
-  {
-    id: 2,
-    title: '读书分享会',
-    date: '2024-03-22',
-    location: '图书馆',
-    club: '文学社',
-    image: 'linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%)'
-  },
-  {
-    id: 3,
-    title: '吉他入门课',
-    date: '2024-03-25',
-    location: '活动中心',
-    club: '吉他社',
-    image: 'linear-gradient(120deg, #fccb90 0%, #d57eeb 100%)'
-  },
-]
+const latestActivities = ref<any[]>([])
 
 const announcements = [
   { id: 1, title: '关于社团活动场地申请的通知', date: '2024-03-15', tag: '重要' },
@@ -58,6 +34,14 @@ const announcements = [
 
 const clubs = ref<Club[]>([])
 const loading = ref(false)
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
+
+const getFullUrl = (path?: string) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `${BASE_URL}${path}`
+}
 
 const fetchClubs = async () => {
   loading.value = true
@@ -71,12 +55,34 @@ const fetchClubs = async () => {
   }
 }
 
+const fetchActivities = async () => {
+  try {
+    const res = await getActivities({ page: 1, pageSize: 6, statuses: 'APPROVED,ONGOING' })
+    latestActivities.value = res.list || []
+  } catch (error: any) {
+    // 静默处理
+  }
+}
+
 onMounted(() => {
   fetchClubs()
+  fetchActivities()
 })
 
 const handleClubClick = (club: any) => {
   router.push(`/clubs/${club.id}`)
+}
+
+const handleViewAllClubs = () => {
+  router.push('/clubs')
+}
+
+const handleMoreActivities = () => {
+  router.push('/activities')
+}
+
+const handleActivityClick = (activity: any) => {
+  router.push(`/activities/${activity.id}`)
 }
 
 </script>
@@ -105,7 +111,7 @@ const handleClubClick = (club: any) => {
         <!-- 推荐社团 -->
         <div class="section-header">
           <h3>推荐社团</h3>
-          <el-button link>查看全部 <el-icon>
+          <el-button link @click="handleViewAllClubs">查看全部 <el-icon>
               <ArrowRight />
             </el-icon></el-button>
         </div>
@@ -118,17 +124,25 @@ const handleClubClick = (club: any) => {
         <!-- 最新活动 -->
         <div class="section-header mt-8">
           <h3>最新活动</h3>
-          <el-button link>更多活动 <el-icon>
+          <el-button link @click="handleMoreActivities">更多活动 <el-icon>
               <ArrowRight />
             </el-icon></el-button>
         </div>
         <div class="activities-scroll">
-          <div v-for="activity in activities" :key="activity.id" class="activity-card">
-            <div class="activity-image" :style="{ background: activity.image }">
-              <span class="activity-tag">{{ activity.club }}</span>
+          <div
+            v-for="activity in latestActivities"
+            :key="activity.id"
+            class="activity-card"
+            @click="handleActivityClick(activity)"
+          >
+            <div
+              class="activity-image"
+              :style="activity.coverImage ? { backgroundImage: `url(${getFullUrl(activity.coverImage)})` } : { background: '#f5f7fa' }"
+            >
+              <span class="activity-tag">{{ activity.club?.name }}</span>
             </div>
             <div class="activity-info">
-              <h4>{{ activity.title }}</h4>
+              <h4>{{ activity.name }}</h4>
               <div class="info-row">
                 <el-icon>
                   <Calendar />
@@ -137,7 +151,7 @@ const handleClubClick = (club: any) => {
               <div class="info-row">
                 <el-icon>
                   <Location />
-                </el-icon> <span>{{ activity.location }}</span>
+                </el-icon> <span>{{ activity.location || '待定' }}</span>
               </div>
             </div>
           </div>
@@ -287,6 +301,9 @@ const handleClubClick = (club: any) => {
 .activity-image {
   height: 120px;
   position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .activity-tag {

@@ -8,6 +8,7 @@ export function getActivities(params?: {
   page: number;
   pageSize: number;
   search?: string;
+  statuses?: string; // 以逗号分隔，例如 "APPROVED,ONGOING"
 }) {
   return request.get<{ list: Activity[]; total: number }>("/activities", {
     params,

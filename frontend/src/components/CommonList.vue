@@ -13,7 +13,7 @@
         </div>
       </template>
 
-      <el-table :data="data" style="width: 100%" v-loading="loading">
+      <el-table :data="data" style="width: 100%" v-loading="loading" @row-click="handleRowClick">
         <el-table-column v-for="col in columns" :key="col.prop" :prop="col.prop" :label="col.label" :width="col.width"
           :min-width="col.minWidth">
           <template #default="scope">
@@ -79,11 +79,15 @@ const props = withDefaults(defineProps<{
   pageSize: 10
 })
 
-const emit = defineEmits(['page-change', 'update:currentPage'])
+const emit = defineEmits(['page-change', 'update:currentPage', 'row-click'])
 
 const handlePageChange = (page: number) => {
   emit('update:currentPage', page)
   emit('page-change', page)
+}
+
+const handleRowClick = (row: any) => {
+  emit('row-click', row)
 }
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')

@@ -268,7 +268,7 @@ export const auditActivity = async (req: Request, res: Response) => {
 
 export const getActivities = async (req: Request, res: Response) => {
   try {
-    const { page = 1, pageSize = 10, search, clubId } = req.query;
+    const { page = 1, pageSize = 10, search, clubId, statuses } = req.query;
     const user = (req as any).user;
 
     // 如果是社团负责人，只获取自己负责社团的活动
@@ -277,18 +277,29 @@ export const getActivities = async (req: Request, res: Response) => {
     // 但根据需求，这里主要服务于管理后台列表。
 
     let leaderId: number | undefined;
-    let statuses: ActivityStatus[] | undefined;
+    let statusList: ActivityStatus[] | undefined;
     if (user && user.role === "LEADER") {
       leaderId = user.id;
     }
     if (user && user.role === "ADMIN") {
-      statuses = [
+      statusList = [
         ActivityStatus.APPROVED,
         ActivityStatus.REJECTED,
         ActivityStatus.ONGOING,
         ActivityStatus.FINISHED,
         ActivityStatus.CANCELED,
       ];
+    } else {
+      // 普通用户或负责人根据前端传入的 statuses 过滤（如 APPROVED 或 ONGOING）
+      if (typeof statuses === "string" && statuses.length > 0) {
+        const raw = (statuses as string).split(",").map((s) => s.trim());
+        const valid = raw.filter((s) =>
+          Object.values(ActivityStatus).includes(s as ActivityStatus)
+        ) as ActivityStatus[];
+        if (valid.length > 0) {
+          statusList = valid;
+        }
+      }
     }
 
     const result = await getAllActivities(
@@ -297,7 +308,7 @@ export const getActivities = async (req: Request, res: Response) => {
       search as string,
       clubId ? parseInt(clubId as string, 10) : undefined,
       leaderId,
-      statuses
+      statusList
     );
     res.status(200).json({
       code: 200,
