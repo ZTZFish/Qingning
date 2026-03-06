@@ -80,6 +80,16 @@
                   拒绝
                 </el-button>
               </div>
+              <div v-else-if="row.status === 'APPROVED'">
+                <el-popconfirm
+                  title="确定要移除该用户吗？移除后状态将变为已拒绝。"
+                  @confirm="handleAudit(row, 'REJECTED')"
+                >
+                  <template #reference>
+                    <el-button type="danger" link size="small">移除</el-button>
+                  </template>
+                </el-popconfirm>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -189,7 +199,7 @@ const handleAudit = async (row: any, status: "APPROVED" | "REJECTED") => {
   try {
     if (!selectedActivityId.value) return;
     await auditEnrollment(selectedActivityId.value, row.id, status);
-    ElMessage.success("操作成功");
+    ElMessage.success(status === 'REJECTED' ? "已移除该用户" : "操作成功");
     fetchEnrollments();
   } catch (error: any) {
     ElMessage.error(error.message || "操作失败");

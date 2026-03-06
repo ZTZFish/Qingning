@@ -344,7 +344,8 @@ export const getClubList = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string, 10) || 1;
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
     const search = (req.query.search as string) || undefined;
-    const result = await getAllClubs(page, pageSize, search);
+    const sort = (req.query.sort as string) || undefined;
+    const result = await getAllClubs(page, pageSize, search, sort);
     res.status(200).json({
       code: 200,
       message: "获取成功",

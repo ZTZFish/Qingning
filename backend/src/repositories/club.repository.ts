@@ -382,14 +382,21 @@ export const findClubsByMemberId = async (
   skip: number,
   take: number
 ) => {
-  const where = {
-    members: {
-      some: {
-        userId: memberId,
-        status: MembershipStatus.APPROVED, // 只查询已通过的成员关系
-      },
-    },
+  const where: any = {
     isDeleted: false,
+    OR: [
+      {
+        members: {
+          some: {
+            userId: memberId,
+            status: MembershipStatus.APPROVED, // 只查询已通过的成员关系
+          },
+        },
+      },
+      {
+        leaderId: memberId,
+      },
+    ],
   };
 
   const [clubs, total] = await prisma.$transaction([
@@ -455,7 +462,8 @@ export const updateClub = async (id: number, data: any) => {
 export const findAllClubs = async (
   skip: number,
   take: number,
-  search?: string
+  search?: string,
+  sortBy?: string
 ) => {
   const where: any = {
     isDeleted: false,
@@ -467,6 +475,15 @@ export const findAllClubs = async (
       { name: { contains: search } },
       { leader: { realName: { contains: search } } },
     ];
+  }
+
+  let orderBy: any = { createdAt: "desc" };
+  if (sortBy === 'memberCount') {
+    orderBy = {
+      members: {
+        _count: 'desc'
+      }
+    };
   }
 
   const [clubs, total] = await prisma.$transaction([
@@ -513,7 +530,7 @@ export const findAllClubs = async (
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip,
       take,
     }),

@@ -431,13 +431,14 @@ export const auditClubApplication = async (
 export const getAllClubs = async (
   page: number,
   pageSize: number,
-  search?: string
+  search?: string,
+  sortBy?: string
 ) => {
   // 这里可以根据需求过滤，通常管理页面显示所有非删除的，
   // 但用户页面显示 APPROVED 的。
   const skip = (page - 1) * pageSize;
   const take = pageSize;
-  const { clubs, total } = await repositoryFindAllClubs(skip, take, search);
+  const { clubs, total } = await repositoryFindAllClubs(skip, take, search, sortBy);
 
   // 格式化时间
   const formattedClubs = clubs.map((club) => ({

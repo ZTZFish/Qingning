@@ -46,7 +46,7 @@ const getFullUrl = (path?: string) => {
 const fetchClubs = async () => {
   loading.value = true
   try {
-    const res = await getClubs({ page: 1, pageSize: 6 })
+    const res = await getClubs({ page: 1, pageSize: 6, sort: 'memberCount' })
     clubs.value = res.list
   } catch (error: any) {
     ElMessage.error(error.message || '获取社团列表失败')

@@ -61,6 +61,7 @@ export function getClubs(params?: {
   page: number;
   pageSize: number;
   search?: string;
+  sort?: string;
 }) {
   return request.get<{ list: Club[]; total: number }>("/clubs", { params });
 }

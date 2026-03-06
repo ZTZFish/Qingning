@@ -272,10 +272,11 @@ export const auditEnrollment = async (
     throw new Error("无权审核报名");
   }
 
-  // 仅允许操作为 APPROVED 或 REJECTED
+  // 允许操作为 APPROVED, REJECTED, CANCELED
   if (
     status !== ParticipationStatus.APPROVED &&
-    status !== ParticipationStatus.REJECTED
+    status !== ParticipationStatus.REJECTED &&
+    status !== ParticipationStatus.CANCELED
   ) {
     throw new Error("无效的审核状态");
   }
