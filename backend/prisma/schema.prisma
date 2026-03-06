@@ -194,11 +194,11 @@ enum ParticipationStatus {
 }
 
 // ────────────────────────────────────────────────
-// 社团公告表 - 社团发布的通知、新闻等
+// 公告表 - 系统公告（管理员发布）和社团公告（负责人发布）
 // ────────────────────────────────────────────────
 model Announcement {
   id        Int      @id @default(autoincrement())              // 公告唯一ID
-  clubId    Int                                               // 所属社团ID
+  clubId    Int?                                              // 所属社团ID（为空表示系统公告）
   authorId  Int?                                              // 发布者ID（可选，方便追溯）
   title     String                                            // 公告标题
   content   String   @db.Text                                  // 公告正文（支持长文本）
@@ -207,7 +207,7 @@ model Announcement {
   updatedAt DateTime @updatedAt                                 // 最后编辑时间
 
   // 关系
-  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  club      Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
   // 社团删除时，级联删除其公告
 
   // 修改为双向关系

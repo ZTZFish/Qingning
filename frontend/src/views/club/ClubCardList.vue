@@ -119,7 +119,7 @@ const fetchData = async () => {
       // Let's assume it returns an array for now based on previous code.
       const res = await getUserLedClubs(userStore.user.id);
       // Client-side pagination for managed clubs if needed, or just show all
-      clubs.value = res; 
+      clubs.value = res;
       total.value = res.length;
     }
   } catch (error: any) {

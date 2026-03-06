@@ -40,6 +40,7 @@ const menuItems = computed(() => {
       { id: 'user-manage', label: '用户管理', icon: UserFilled, path: '/admin/users' },
       { id: 'club-manage', label: '社团管理', icon: Management, path: '/admin/clubs' },
       { id: 'activity-manage', label: '活动管理', icon: List, path: '/admin/activities' },
+      { id: 'announcement-manage', label: '公告发布', icon: ChatDotRound, path: '/admin/announcements' },
       { id: 'content-audit', label: '内容审批', icon: CircleCheck, path: '/admin/audit' }
     ]
   } else if (role === 'LEADER') {
@@ -62,6 +63,9 @@ const menuItems = computed(() => {
   }
 
   items.push({ id: 'messages', label: '消息通知', icon: ChatDotRound, path: '/messages' })
+  if (role === 'ADMIN') {
+    items = items.filter(item => item.id !== 'messages');
+  }
   return items
 })
 
@@ -133,12 +137,7 @@ const getAvatarUrl = (path?: string) => {
       <!-- 顶部栏 -->
       <header class="top-bar">
         <div class="search-wrapper">
-          <el-input
-            v-model="searchQuery"
-            placeholder="搜索社团或活动..."
-            :prefix-icon="Search"
-            class="search-input"
-          />
+          <!-- 搜索框已移除 -->
         </div>
         <div class="actions">
           <el-button circle>

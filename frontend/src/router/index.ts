@@ -54,6 +54,18 @@ const routes = [
         meta: { roles: [Role.ADMIN], title: "内容审批 - 青柠社团管理系统" },
       },
       {
+        path: "admin/announcements",
+        name: "admin-announcements",
+        component: () => import("../views/admin/AnnouncementList.vue"),
+        meta: { roles: [Role.ADMIN], title: "公告管理 - 青柠社团管理系统" },
+      },
+      {
+        path: "announcements/:id",
+        name: "announcement-detail",
+        component: () => import("@/views/AnnouncementDetail.vue"),
+        meta: { title: "公告详情 - 青柠社团管理系统" },
+      },
+      {
         path: "clubs",
         name: "discover-clubs",
         component: () => import("@/views/club/ClubCardList.vue"),

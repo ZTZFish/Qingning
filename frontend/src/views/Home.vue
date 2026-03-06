@@ -14,28 +14,38 @@ import { type Club } from '@/types'
 import { ElMessage } from 'element-plus'
 import { getClubs } from '@/api/club'
 import { getActivities } from '@/api/activity'
+import { getAnnouncements } from '@/api/announcement'
 
 const router = useRouter()
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
 // 模拟数据
 const banners = [
-  { id: 1, title: '2024年春季社团招新开始啦！', sub: '寻找志同道合的伙伴', color: '#00A69A' },
-  { id: 2, title: '摄影协会：光影艺术展', sub: '本周五下午3点，图书馆一楼', color: '#FF7F50' },
-  { id: 3, title: '计算机社：AI技术分享会', sub: '探索人工智能的无限可能', color: '#409EFF' },
+  { id: 1, url: `${BASE_URL}/uploads/banners/banner1.jpg`, path: '/announcements/1' },
+  { id: 2, url: `${BASE_URL}/uploads/activities/47-1772550054935-978336642.png`, path: '/activities/2' },
+  { id: 3, url: `${BASE_URL}/uploads/activities/33-1772800945555-587100633.jpg`, path: '/activities/6' },
 ]
 
 const latestActivities = ref<any[]>([])
 
-const announcements = [
-  { id: 1, title: '关于社团活动场地申请的通知', date: '2024-03-15', tag: '重要' },
-  { id: 2, title: '2023年度优秀社团评选结果公示', date: '2024-03-10', tag: '公示' },
-  { id: 3, title: '新学期社团负责人会议通知', date: '2024-03-05', tag: '会议' },
-]
+const announcements = ref<any[]>([])
 
 const clubs = ref<Club[]>([])
 const loading = ref(false)
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
+
+
+const fetchAnnouncements = async () => {
+  try {
+    const res = await getAnnouncements({ page: 1, pageSize: 5 })
+    announcements.value = res.list.map(item => ({
+      ...item,
+      date: item.createdAt.split(' ')[0], // 只显示日期部分
+      tag: item.pinned ? '置顶' : '公告'
+    }))
+  } catch (error) {
+    console.error('获取公告失败', error)
+  }
+}
 
 const getFullUrl = (path?: string) => {
   if (!path) return ''
@@ -67,6 +77,7 @@ const fetchActivities = async () => {
 onMounted(() => {
   fetchClubs()
   fetchActivities()
+  fetchAnnouncements()
 })
 
 const handleClubClick = (club: any) => {
@@ -91,15 +102,14 @@ const handleActivityClick = (activity: any) => {
   <div class="home-container">
     <!-- 轮播图 -->
     <div class="banner-section">
-      <el-carousel trigger="click" :interval="5000" type="card">
+      <el-carousel trigger="click" :interval="5000" type="card" height="400px">
         <el-carousel-item v-for="item in banners" :key="item.id">
-          <div class="banner-card" :style="{ backgroundColor: item.color }">
-            <div class="banner-content">
-              <h2>{{ item.title }}</h2>
-              <p>{{ item.sub }}</p>
-              <el-button type="primary" plain class="banner-btn">查看详情</el-button>
-            </div>
-            <div class="banner-decoration"></div>
+          <div 
+            class="banner-card" 
+            :style="{ backgroundImage: `url(${item.url})` }"
+            @click="router.push(item.path)"
+            style="cursor: pointer"
+          >
           </div>
         </el-carousel-item>
       </el-carousel>
@@ -166,11 +176,17 @@ const handleActivityClick = (activity: any) => {
             <h3>公告通知</h3>
           </div>
           <div class="announcement-list">
-            <div v-for="item in announcements" :key="item.id" class="announcement-item">
-              <div class="ann-tag">{{ item.tag }}</div>
+            <div
+              v-for="ann in announcements"
+              :key="ann.id"
+              class="announcement-item"
+              @click="router.push(`/announcements/${ann.id}`)"
+              style="cursor: pointer"
+            >
+              <div class="ann-tag" :class="{ 'pinned': ann.pinned }">{{ ann.tag || '公告' }}</div>
               <div class="ann-content">
-                <p class="ann-title">{{ item.title }}</p>
-                <span class="ann-date">{{ item.date }}</span>
+                <div class="ann-title">{{ ann.title }}</div>
+                <div class="ann-date">{{ ann.date }}</div>
               </div>
             </div>
           </div>
@@ -217,30 +233,11 @@ const handleActivityClick = (activity: any) => {
   box-sizing: border-box;
   height: 100%;
   border-radius: 16px;
-  padding: 40px;
-  color: #fff;
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.banner-content h2 {
-  font-size: 28px;
-  margin-bottom: 12px;
-}
-
-.banner-content p {
-  font-size: 16px;
-  opacity: 0.9;
-  margin-bottom: 24px;
-}
-
-.banner-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #fff;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 /* Grid Layout */
