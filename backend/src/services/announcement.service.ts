@@ -1,4 +1,3 @@
-
 import {
   createAnnouncement,
   updateAnnouncement,
@@ -51,17 +50,16 @@ export const editAnnouncement = async (
   if (!operator) throw new Error("用户不存在");
 
   // 权限检查
-  if (announcement.clubId === null) {
-    // 系统公告，仅管理员可编辑
-    if (operator.role !== "ADMIN") {
-      throw new Error("无权编辑系统公告");
-    }
-  } else {
-    // 社团公告，管理员或该社团负责人可编辑
-    // 此处简化，假设管理员有所有权限，或者 authorId === operatorId
-    if (operator.role !== "ADMIN" && announcement.authorId !== operatorId) {
-      throw new Error("无权编辑该公告");
-    }
+
+  // 系统公告，仅管理员可编辑
+  if (operator.role !== "ADMIN") {
+    throw new Error("无权编辑系统公告");
+  }
+
+  // 社团公告，管理员或该社团负责人可编辑
+  // 此处简化，假设管理员有所有权限，或者 authorId === operatorId
+  if (operator.role !== "ADMIN" && announcement.authorId !== operatorId) {
+    throw new Error("无权编辑该公告");
   }
 
   return await updateAnnouncement(id, data);
@@ -74,11 +72,7 @@ export const removeAnnouncement = async (operatorId: number, id: number) => {
   const operator = await findUserById(operatorId);
   if (!operator) throw new Error("用户不存在");
 
-  if (announcement.clubId === null) {
-    if (operator.role !== "ADMIN") {
-      throw new Error("无权删除系统公告");
-    }
-  } else {
+  {
     if (operator.role !== "ADMIN" && announcement.authorId !== operatorId) {
       throw new Error("无权删除该公告");
     }

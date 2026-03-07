@@ -87,7 +87,6 @@ model Club {
 
   members       ClubMembership[]  // 该社团的所有成员关系（多对多）
   activities    Activity[]        // 该社团发布的所有活动（一对多）
-  announcements Announcement[]    // 该社团发布的所有公告（一对多）
 
   @@index([leaderId])     // 加速按负责人查询社团
   @@index([status])       // 加速按状态筛选社团（如待审批列表）
@@ -198,7 +197,6 @@ enum ParticipationStatus {
 // ────────────────────────────────────────────────
 model Announcement {
   id        Int      @id @default(autoincrement())              // 公告唯一ID
-  clubId    Int?                                              // 所属社团ID（为空表示系统公告）
   authorId  Int?                                              // 发布者ID（可选，方便追溯）
   title     String                                            // 公告标题
   content   String   @db.Text                                  // 公告正文（支持长文本）
@@ -206,15 +204,11 @@ model Announcement {
   createdAt DateTime @default(now())                           // 发布时间
   updatedAt DateTime @updatedAt                                 // 最后编辑时间
 
-  // 关系
-  club      Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  // 社团删除时，级联删除其公告
-
   // 修改为双向关系
   author    User?    @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   // 作者删除时，authorId 置空，不删除公告
 
-  @@index([clubId, pinned(sort: Desc), createdAt(sort: Desc)])  // 常用查询：按社团 + 置顶优先 + 最新排序
+  @@index([pinned(sort: Desc), createdAt(sort: Desc)])  // 常用查询：置顶优先 + 最新排序
 }
 
 // ────────────────────────────────────────────────
