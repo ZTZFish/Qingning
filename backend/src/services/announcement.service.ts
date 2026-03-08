@@ -13,19 +13,17 @@ export const publishAnnouncement = async (
   data: {
     title: string;
     content: string;
-    clubId?: number;
     pinned?: boolean;
   }
 ) => {
   const user = await findUserById(authorId);
   if (!user) throw new Error("用户不存在");
 
-  // 如果没有 clubId，说明是系统公告，只有管理员可以发布
-  if (!data.clubId && user.role !== "ADMIN") {
+  // 系统公告，只有管理员可以发布
+  if (user.role !== "ADMIN") {
     throw new Error("只有管理员可以发布系统公告");
   }
 
-  // 如果有 clubId，需要检查用户是否是该社团负责人（此处简化，假设 Controller 层已校验权限或 Trust）
   // 实际上应该校验社团是否存在及权限
 
   return await createAnnouncement({
@@ -84,16 +82,14 @@ export const removeAnnouncement = async (operatorId: number, id: number) => {
 export const getAnnouncementList = async (
   page: number,
   pageSize: number,
-  search?: string,
-  clubId?: number
+  search?: string
 ) => {
   const skip = (page - 1) * pageSize;
   const take = pageSize;
   const { announcements, total } = await findAllAnnouncements(
     skip,
     take,
-    search,
-    clubId
+    search
   );
 
   const list = announcements.map((a) => ({

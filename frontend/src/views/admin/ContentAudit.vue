@@ -2,7 +2,16 @@
   <div class="content-audit">
     <el-tabs v-model="activeTab" class="audit-tabs">
       <!-- 社团创建审批 -->
-      <el-tab-pane label="社团申请审批" name="clubs">
+      <el-tab-pane name="clubs">
+        <template #label>
+          <span>社团申请审批</span>
+          <el-badge 
+            v-if="notificationStore.counts.admin.pendingClubs > 0" 
+            :value="notificationStore.counts.admin.pendingClubs" 
+            class="ml-2" 
+            type="danger" 
+          />
+        </template>
         <CommonList
           title="待审批社团"
           :data="pendingClubs"
@@ -26,7 +35,16 @@
       </el-tab-pane>
 
       <!-- 活动发布审批 -->
-      <el-tab-pane label="活动申请审批" name="activities">
+      <el-tab-pane name="activities">
+        <template #label>
+          <span>活动申请审批</span>
+          <el-badge 
+            v-if="notificationStore.counts.admin.pendingActivities > 0" 
+            :value="notificationStore.counts.admin.pendingActivities" 
+            class="ml-2" 
+            type="danger" 
+          />
+        </template>
         <CommonList
           title="待审批活动"
           :data="pendingActivities"
@@ -147,7 +165,9 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Status, ActivityStatus, ClubType, type Column } from "@/types";
 import { getPendingClubs, auditClub } from "@/api/club";
 import { getPendingActivities, auditActivity } from "@/api/activity";
+import { useNotificationStore } from "@/stores/notification";
 
+const notificationStore = useNotificationStore();
 const activeTab = ref("clubs");
 const loading = ref(false);
 
@@ -217,6 +237,7 @@ const fetchClubs = async () => {
     });
     pendingClubs.value = data.list;
     pendingClubsTotal.value = data.total;
+    notificationStore.fetchCounts();
   } catch (error: any) {
     ElMessage.error(error.message || "获取社团审批列表失败");
   } finally {
@@ -233,6 +254,7 @@ const fetchActivities = async () => {
     });
     pendingActivities.value = data.list;
     pendingActivitiesTotal.value = data.total;
+    notificationStore.fetchCounts();
   } catch (error: any) {
     ElMessage.error(error.message || "获取活动审批列表失败");
   } finally {
@@ -273,7 +295,7 @@ const handleApproveClub = (row: any) => {
         ElMessage.error(error.message || "操作失败");
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 const handleRejectClub = (row: any) => {
@@ -292,7 +314,7 @@ const handleRejectClub = (row: any) => {
         ElMessage.error(error.message || "操作失败");
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 const handleApproveActivity = (row: any) => {
@@ -310,7 +332,7 @@ const handleApproveActivity = (row: any) => {
         ElMessage.error(error.message || "操作失败");
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 const handleRejectActivity = (row: any) => {
@@ -329,7 +351,7 @@ const handleRejectActivity = (row: any) => {
         ElMessage.error(error.message || "操作失败");
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // ... existing view handlers

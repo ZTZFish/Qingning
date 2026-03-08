@@ -61,13 +61,13 @@ const attachActivityPreviews = <T extends { activities?: any[] }>(clubs: T[]) =>
     ...club,
     activities: Array.isArray(club.activities)
       ? club.activities.map((a: any) => ({
-          ...a,
-          status: deriveActivityStatus(a.status, a.date, a.endAt),
-          date: formatDateTime(a.date),
-          endAt: formatDateTime(a.endAt),
-          createdAt: formatDateTime(a.createdAt),
-          updatedAt: formatDateTime(a.updatedAt),
-        }))
+        ...a,
+        status: deriveActivityStatus(a.status, a.date, a.endAt),
+        date: formatDateTime(a.date),
+        endAt: formatDateTime(a.endAt),
+        createdAt: formatDateTime(a.createdAt),
+        updatedAt: formatDateTime(a.updatedAt),
+      }))
       : club.activities,
   }));
 };
@@ -134,13 +134,13 @@ export const getClubInfo = async (clubId: number, userId: number) => {
 
   const activities = Array.isArray((club as any).activities)
     ? (club as any).activities.map((a: any) => ({
-        ...a,
-        status: deriveActivityStatus(a.status, a.date, a.endAt),
-        date: formatDateTime(a.date),
-        endAt: formatDateTime(a.endAt),
-        createdAt: formatDateTime(a.createdAt),
-        updatedAt: formatDateTime(a.updatedAt),
-      }))
+      ...a,
+      status: deriveActivityStatus(a.status, a.date, a.endAt),
+      date: formatDateTime(a.date),
+      endAt: formatDateTime(a.endAt),
+      createdAt: formatDateTime(a.createdAt),
+      updatedAt: formatDateTime(a.updatedAt),
+    }))
     : (club as any).activities;
 
   return {
@@ -339,7 +339,7 @@ export const getMembers = async (
     total:
       total +
       (page === 1 &&
-      !list.find((m) => m.id === club.leaderId && m.roleInClub === "LEADER")
+        !list.find((m) => m.id === club.leaderId && m.roleInClub === "LEADER")
         ? 1
         : 0), // 修正 total (仅做参考)
     page,
@@ -475,11 +475,14 @@ export const getApprovedClubs = async () => {
 export const getUserLedClubs = async (userId: number) => {
   const clubs = await findClubsByLeaderId(userId);
 
+  // 过滤掉未通过审批的社团
+  const approvedClubs = clubs.filter(club => club.status === Status.APPROVED);
+
   // 格式化时间
-  const formattedClubs = clubs.map((club) => ({
+  const formattedClubs = approvedClubs.map((club) => ({
     ...club,
     createdAt: formatDateTime(club.createdAt),
-    updatedAt: formatDateTime(club.updatedAt),
+    updatedAt: formatDateTime(club.updatedAt)
   }));
 
   const clubsWithMemberCount = await attachMemberCount(formattedClubs);
@@ -495,8 +498,11 @@ export const getUserJoinedClubs = async (
   const take = pageSize;
   const { clubs, total } = await findClubsByMemberId(userId, skip, take);
 
+  // 过滤掉未通过审批的社团
+  const approvedClubs = clubs.filter(club => club.status === Status.APPROVED);
+
   // 格式化时间
-  const list = clubs.map((club) => ({
+  const list = approvedClubs.map((club) => ({
     ...club,
     createdAt: formatDateTime(club.createdAt),
     updatedAt: formatDateTime(club.updatedAt),

@@ -86,7 +86,9 @@ import {
   auditClubApplication,
 } from "@/api/club";
 import type { Club } from "@/types";
+import { useNotificationStore } from "@/stores/notification";
 
+const notificationStore = useNotificationStore();
 const userStore = useUserStore();
 const myClubs = ref<Club[]>([]);
 const currentClubId = ref<number | undefined>(undefined);
@@ -159,6 +161,7 @@ const handleAudit = (row: any, status: "APPROVED" | "REJECTED") => {
         await auditClubApplication(currentClubId.value!, row.id, status);
         ElMessage.success(`已${actionText}`);
         fetchApplications();
+        notificationStore.fetchCounts();
       } catch (error: any) {
         ElMessage.error(error.message || "操作失败");
       }

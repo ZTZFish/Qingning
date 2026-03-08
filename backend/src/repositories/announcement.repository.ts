@@ -4,7 +4,6 @@ export const createAnnouncement = async (data: {
   title: string;
   content: string;
   authorId?: number;
-  clubId?: number;
   pinned?: boolean;
 }) => {
   return await prisma.announcement.create({
@@ -12,7 +11,6 @@ export const createAnnouncement = async (data: {
       title: data.title,
       content: data.content,
       authorId: data.authorId ?? null,
-      clubId: data.clubId ?? null,
       pinned: data.pinned ?? false,
     },
   });
@@ -50,12 +48,6 @@ export const findAnnouncementById = async (id: number) => {
           avatar: true,
         },
       },
-      club: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
     },
   });
 };
@@ -63,18 +55,9 @@ export const findAnnouncementById = async (id: number) => {
 export const findAllAnnouncements = async (
   skip: number,
   take: number,
-  search?: string,
-  clubId?: number
+  search?: string
 ) => {
   const where: any = {};
-
-  if (clubId) {
-    where.clubId = clubId;
-  } else {
-    // 如果没有传 clubId，默认只查询系统公告 (clubId: null)
-    // 或者根据需求查询所有，这里假设不传 clubId 就查系统公告
-    where.clubId = null;
-  }
 
   if (search) {
     where.title = { contains: search };

@@ -116,7 +116,9 @@ import { ElMessage } from "element-plus";
 import { getActivities, getActivityEnrollments, auditEnrollment } from "@/api/activity";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/user";
+import { useNotificationStore } from "@/stores/notification";
 
+const notificationStore = useNotificationStore();
 const route = useRoute();
 const userStore = useUserStore();
 const myActivities = ref<any[]>([]);
@@ -201,6 +203,7 @@ const handleAudit = async (row: any, status: "APPROVED" | "REJECTED") => {
     await auditEnrollment(selectedActivityId.value, row.id, status);
     ElMessage.success(status === 'REJECTED' ? "已移除该用户" : "操作成功");
     fetchEnrollments();
+    notificationStore.fetchCounts();
   } catch (error: any) {
     ElMessage.error(error.message || "操作失败");
   }

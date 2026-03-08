@@ -20,7 +20,7 @@ const router = useRouter()
 const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
 // 模拟数据
 const banners = [
-  { id: 1, url: `${BASE_URL}/uploads/banners/banner1.jpg`, path: '/announcements/1' },
+  { id: 1, url: `${BASE_URL}/uploads/banners/banner1.png`, path: '/announcements/1' },
   { id: 2, url: `${BASE_URL}/uploads/activities/47-1772550054935-978336642.png`, path: '/activities/2' },
   { id: 3, url: `${BASE_URL}/uploads/activities/33-1772800945555-587100633.jpg`, path: '/activities/6' },
 ]

@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useNotificationStore } from '@/stores/notification'
 import {
   User,
   Search,
@@ -20,6 +21,7 @@ import {
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const notificationStore = useNotificationStore()
 
 const activeMenu = ref('')
 const searchQuery = ref('')
@@ -32,7 +34,7 @@ const title = computed(() => {
 // 定义菜单条目
 const menuItems = computed(() => {
   const role = userStore.user?.role
-  let items = []
+  let items: any[] = []
 
   if (role === 'ADMIN') {
     // 管理员菜单
@@ -41,15 +43,33 @@ const menuItems = computed(() => {
       { id: 'club-manage', label: '社团管理', icon: Management, path: '/admin/clubs' },
       { id: 'activity-manage', label: '活动管理', icon: List, path: '/admin/activities' },
       { id: 'announcement-manage', label: '公告发布', icon: ChatDotRound, path: '/admin/announcements' },
-      { id: 'content-audit', label: '内容审批', icon: CircleCheck, path: '/admin/audit' }
+      {
+        id: 'content-audit',
+        label: '内容审批',
+        icon: CircleCheck,
+        path: '/admin/audit',
+        badge: notificationStore.adminTotal > 0
+      }
     ]
   } else if (role === 'LEADER') {
     // 负责人菜单
     items = [
       { id: 'club-manage', label: '社团管理', icon: Management, path: '/leader/club' },
       { id: 'activity-manage', label: '活动管理', icon: List, path: '/leader/activities' },
-      { id: 'join-apply', label: '入社申请', icon: User, path: '/leader/join-apply' },
-      { id: 'activity-enrollments', label: '活动录取', icon: Calendar, path: '/leader/activity-enrollments' }
+      {
+        id: 'join-apply',
+        label: '入社申请',
+        icon: User,
+        path: '/leader/join-apply',
+        badge: notificationStore.counts.leader.pendingJoinApplications > 0
+      },
+      {
+        id: 'activity-enrollments',
+        label: '活动录取',
+        icon: Calendar,
+        path: '/leader/activity-enrollments',
+        badge: notificationStore.counts.leader.pendingActivityEnrollments > 0
+      }
     ]
   } else {
     // 普通用户菜单
@@ -71,7 +91,20 @@ const menuItems = computed(() => {
 
 onMounted(() => {
   userStore.fetchUserInfo()
+  if (userStore.user) {
+    notificationStore.fetchCounts()
+  }
 })
+
+// Watch for user change to fetch notifications
+watch(
+  () => userStore.user,
+  (user) => {
+    if (user) {
+      notificationStore.fetchCounts()
+    }
+  }
+)
 
 // Watch route change to update active menu
 watch(
@@ -117,8 +150,11 @@ const getAvatarUrl = (path?: string) => {
           :class="{ active: activeMenu === item.id }"
           @click="handleMenuClick(item)"
         >
-          <el-icon><component :is="item.icon" /></el-icon>
-          <span>{{ item.label }}</span>
+          <div class="nav-item-content">
+            <el-icon><component :is="item.icon" /></el-icon>
+            <span>{{ item.label }}</span>
+          </div>
+          <div v-if="item.badge" class="badge-dot"></div>
         </div>
       </nav>
 
@@ -202,27 +238,40 @@ const getAvatarUrl = (path?: string) => {
 .nav-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 12px 16px;
-  border-radius: 12px;
   cursor: pointer;
+  border-radius: 8px;
   color: #606266;
   transition: all 0.3s;
-  font-weight: 500;
 }
 
-.nav-item .el-icon {
-  margin-right: 12px;
+.nav-item-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-item-content .el-icon {
   font-size: 20px;
 }
 
 .nav-item:hover {
-  background-color: #f0f9f8;
+  background-color: #f5f7fa;
   color: #00A69A;
 }
 
 .nav-item.active {
-  background-color: #e0f2f1;
+  background-color: #e6f7f6;
   color: #00A69A;
+  font-weight: 500;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #f56c6c;
+  border-radius: 50%;
 }
 
 .user-profile {

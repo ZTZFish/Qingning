@@ -200,13 +200,39 @@ export const findPendingMemberships = async (
       },
       skip,
       take,
-      orderBy: { joinedAt: "asc" }, // 申请早的在前
+      orderBy: { joinedAt: "desc" },
     }),
     prisma.clubMembership.count({
       where: { clubId, status: MembershipStatus.PENDING },
     }),
   ]);
   return { members, total };
+};
+
+export const countPendingClubs = async () => {
+  return await prisma.club.count({
+    where: { status: Status.PENDING, isDeleted: false },
+  });
+};
+
+export const countPendingMembershipsByLeader = async (leaderId: number) => {
+  // 1. 查找该负责人管理的所有社团ID
+  const clubs = await prisma.club.findMany({
+    where: { leaderId, isDeleted: false },
+    select: { id: true },
+  });
+  
+  const clubIds = clubs.map(c => c.id);
+  
+  if (clubIds.length === 0) return 0;
+
+  // 2. 统计这些社团的待审核成员
+  return await prisma.clubMembership.count({
+    where: {
+      clubId: { in: clubIds },
+      status: MembershipStatus.PENDING,
+    },
+  });
 };
 
 export const updateMembershipStatus = async (

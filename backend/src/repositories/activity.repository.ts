@@ -168,6 +168,44 @@ export const updateActivity = async (id: number, data: any) => {
   });
 };
 
+export const countPendingActivities = async () => {
+  return await prisma.activity.count({
+    where: { status: ActivityStatus.PENDING, isDeleted: false },
+  });
+};
+
+export const countPendingEnrollmentsByLeader = async (leaderId: number) => {
+  // 1. 查找该负责人管理的所有社团ID
+  const clubs = await prisma.club.findMany({
+    where: { leaderId, isDeleted: false },
+    select: { id: true },
+  });
+
+  const clubIds = clubs.map((c) => c.id);
+
+  if (clubIds.length === 0) return 0;
+
+  // 2. 查找这些社团下的所有活动ID
+  const activities = await prisma.activity.findMany({
+    where: {
+      clubId: { in: clubIds },
+      isDeleted: false,
+    },
+    select: { id: true },
+  });
+
+  const activityIds = activities.map((a) => a.id);
+  if (activityIds.length === 0) return 0;
+
+  // 3. 统计这些活动的待审核报名
+  return await prisma.userActivity.count({
+    where: {
+      activityId: { in: activityIds },
+      status: ParticipationStatus.PENDING,
+    },
+  });
+};
+
 export const findAllActivities = async (
   skip: number,
   take: number,

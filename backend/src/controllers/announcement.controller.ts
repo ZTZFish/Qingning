@@ -1,4 +1,3 @@
-
 import { Request, Response } from "express";
 import {
   publishAnnouncement,
@@ -11,7 +10,7 @@ import {
 export const create = async (req: Request, res: Response) => {
   try {
     const authorId = (req as any).user.id;
-    const { title, content, pinned, clubId } = req.body;
+    const { title, content, pinned } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ code: 400, message: "标题和内容不能为空" });
@@ -21,7 +20,6 @@ export const create = async (req: Request, res: Response) => {
       title,
       content,
       pinned,
-      clubId: clubId ? parseInt(clubId, 10) : undefined,
     });
 
     res.status(201).json({
@@ -77,11 +75,8 @@ export const getList = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string, 10) || 1;
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
     const search = (req.query.search as string) || undefined;
-    const clubId = req.query.clubId
-      ? parseInt(req.query.clubId as string, 10)
-      : undefined;
 
-    const result = await getAnnouncementList(page, pageSize, search, clubId);
+    const result = await getAnnouncementList(page, pageSize, search);
 
     res.status(200).json({
       code: 200,
