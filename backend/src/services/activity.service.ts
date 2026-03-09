@@ -282,7 +282,23 @@ export const auditEnrollment = async (
     throw new Error("无效的审核状态");
   }
 
-  return await updateUserParticipationStatus(userId, activityId, status);
+  const result = await updateUserParticipationStatus(userId, activityId, status);
+
+  // 发送个人消息通知活动录取结果
+  const statusText =
+    status === ParticipationStatus.APPROVED
+      ? "已通过"
+      : status === ParticipationStatus.REJECTED
+      ? "被拒绝"
+      : "状态更新";
+
+  await createPersonalMessage({
+    targetId: userId,
+    title: "活动报名结果通知",
+    content: `您报名参加活动「${activity.name}」的申请${statusText}。`,
+  });
+
+  return result;
 };
 
 export const updateActivityDraft = async (

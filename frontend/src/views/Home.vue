@@ -67,7 +67,7 @@ const fetchClubs = async () => {
 
 const fetchActivities = async () => {
   try {
-    const res = await getActivities({ page: 1, pageSize: 6, statuses: 'APPROVED,ONGOING' })
+    const res = await getActivities({ page: 1, pageSize: 4, statuses: 'APPROVED,ONGOING' })
     latestActivities.value = res.list || []
   } catch (error: any) {
     // 静默处理
@@ -244,7 +244,11 @@ const handleActivityClick = (activity: any) => {
 .grid-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 24px;
+  gap: 25px;
+}
+
+.left-column {
+  min-width: 0;
 }
 
 .section-header {
@@ -278,6 +282,7 @@ const handleActivityClick = (activity: any) => {
   overflow-x: auto;
   gap: 16px;
   padding-bottom: 16px;
+  min-width: 0;
 }
 
 .activity-card {
