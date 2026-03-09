@@ -82,7 +82,7 @@ const menuItems = computed(() => {
     ]
   }
 
-  items.push({ id: 'messages', label: '消息通知', icon: ChatDotRound, path: '/messages' })
+  items.push({ id: 'messages', label: '消息通知', icon: ChatDotRound, path: '/messages', badge: notificationStore.hasUnreadMessages })
   if (role === 'ADMIN') {
     items = items.filter(item => item.id !== 'messages');
   }

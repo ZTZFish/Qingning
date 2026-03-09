@@ -1,4 +1,3 @@
-
 import request from "@/utils/request";
 
 export interface Announcement {
@@ -8,6 +7,8 @@ export interface Announcement {
   title: string;
   content: string;
   pinned: boolean;
+  targetId?: number;
+  isRead?: boolean;
   createdAt: string;
   updatedAt: string;
   author?: {
@@ -22,6 +23,7 @@ export function getAnnouncements(params?: {
   pageSize: number;
   search?: string;
   clubId?: number;
+  type?: "public" | "messages";
 }) {
   return request.get<{ list: Announcement[]; total: number }>(
     "/announcements",
@@ -57,4 +59,8 @@ export function updateAnnouncement(
 
 export function deleteAnnouncement(id: number) {
   return request.delete(`/announcements/${id}`);
+}
+
+export function markMessageRead(id: number) {
+  return request.put(`/announcements/messages/${id}/read`);
 }

@@ -291,14 +291,35 @@ export const getActivities = async (req: Request, res: Response) => {
       ];
     } else {
       // 普通用户或负责人根据前端传入的 statuses 过滤（如 APPROVED 或 ONGOING）
+      const allowed: ActivityStatus[] = [
+        ActivityStatus.APPROVED,
+        ActivityStatus.ONGOING,
+        ActivityStatus.FINISHED,
+        ActivityStatus.CANCELED,
+      ];
+
+      // 如果是普通用户（非管理员且非查看自己社团的负责人），限制只能查看允许的状态
+      const isOrdinaryUser = !leaderId;
+
       if (typeof statuses === "string" && statuses.length > 0) {
         const raw = (statuses as string).split(",").map((s) => s.trim());
-        const valid = raw.filter((s) =>
+        let valid = raw.filter((s) =>
           Object.values(ActivityStatus).includes(s as ActivityStatus)
         ) as ActivityStatus[];
+
+        if (isOrdinaryUser) {
+          valid = valid.filter((s) => allowed.includes(s));
+        }
+
         if (valid.length > 0) {
           statusList = valid;
+        } else if (isOrdinaryUser) {
+          // 如果提供了状态但都不合法（或被过滤掉），普通用户默认只看允许的状态
+          statusList = allowed;
         }
+      } else if (isOrdinaryUser) {
+        // 如果没有提供状态参数，普通用户默认只看允许的状态
+        statusList = allowed;
       }
     }
 

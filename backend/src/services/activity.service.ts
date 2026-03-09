@@ -17,6 +17,7 @@ import { findUserById } from "../repositories/user.repository";
 import { formatDateTime } from "../utils/date";
 import { deleteFile } from "../utils/file";
 import { ActivityStatus, ParticipationStatus } from "@prisma/client";
+import { createPersonalMessage } from "./announcement.service";
 
 const deriveStatus = (
   status: ActivityStatus,
@@ -401,6 +402,25 @@ export const auditActivityApplication = async (
   // 如果审批被驳回，删除活动封面图
   if (status === ActivityStatus.REJECTED) {
     deleteFile(activity.coverImage);
+  }
+
+  if ((activity as any).club?.leaderId) {
+    const title = "活动审批结果通知";
+    const statusText =
+      status === ActivityStatus.APPROVED
+        ? "已通过"
+        : status === ActivityStatus.REJECTED
+        ? "已驳回"
+        : `状态已更新为 ${status}`;
+    const content = `您提交的活动「${activity.name}」${statusText}${
+      status === ActivityStatus.REJECTED && reason ? `，原因：${reason}` : ""
+    }。`;
+
+    await createPersonalMessage({
+      targetId: (activity as any).club.leaderId,
+      title,
+      content,
+    });
   }
 
   return updatedActivity;

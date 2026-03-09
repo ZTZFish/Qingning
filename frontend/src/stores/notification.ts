@@ -1,4 +1,3 @@
-
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { getPendingCounts, type PendingCounts } from "@/api/notification";
@@ -14,6 +13,7 @@ export const useNotificationStore = defineStore("notification", () => {
       pendingJoinApplications: 0,
       pendingActivityEnrollments: 0,
     },
+    unreadMessages: 0,
   });
 
   const userStore = useUserStore();
@@ -23,14 +23,16 @@ export const useNotificationStore = defineStore("notification", () => {
     try {
       const res = await getPendingCounts();
       // @ts-ignore: res.data might be wrapped or not depending on request util
-      counts.value = res; 
+      counts.value = res;
     } catch (error) {
       console.error("Failed to fetch notification counts", error);
     }
   };
 
   const adminTotal = computed(() => {
-    return counts.value.admin.pendingClubs + counts.value.admin.pendingActivities;
+    return (
+      counts.value.admin.pendingClubs + counts.value.admin.pendingActivities
+    );
   });
 
   const leaderTotal = computed(() => {
@@ -40,10 +42,13 @@ export const useNotificationStore = defineStore("notification", () => {
     );
   });
 
+  const hasUnreadMessages = computed(() => counts.value.unreadMessages > 0);
+
   return {
     counts,
     fetchCounts,
     adminTotal,
     leaderTotal,
+    hasUnreadMessages,
   };
 });

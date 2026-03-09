@@ -100,6 +100,12 @@ const routes = [
         component: () => import("@/views/user/CreateClub.vue"),
         meta: { requiresAuth: true },
       },
+      {
+        path: "messages",
+        name: "messages",
+        component: () => import("@/views/Messages.vue"),
+        meta: { title: "消息通知 - 青柠社团管理系统", requiresAuth: true },
+      },
     ],
   },
   {

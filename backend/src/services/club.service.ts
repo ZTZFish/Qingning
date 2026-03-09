@@ -24,6 +24,7 @@ import {
 import { updateUser, findUserById } from "../repositories/user.repository";
 import { deleteFile } from "../utils/file";
 import { formatDateTime } from "../utils/date";
+import { createPersonalMessage } from "./announcement.service";
 
 const attachMemberCount = async <T extends { id: number; leaderId: number }>(
   clubs: T[]
@@ -424,6 +425,17 @@ export const auditClubApplication = async (
     deleteFile(club.coverImage);
     deleteFile(club.materials);
   }
+
+  const title = "社团审批结果通知";
+  const statusText = status === Status.APPROVED ? "已通过" : "已驳回";
+  const content = `您提交的社团「${club.name}」申请${statusText}${
+    status === Status.REJECTED && reason ? `，原因：${reason}` : ""
+  }。`;
+  await createPersonalMessage({
+    targetId: club.leaderId,
+    title,
+    content,
+  });
 
   return updatedClub;
 };

@@ -202,6 +202,7 @@ model Announcement {
   content   String   @db.Text                                  // 公告正文（支持长文本）
   pinned    Boolean  @default(false)                           // 是否置顶（置顶的显示在最前面）
   targetId  Int      @default(0)                            // 目标对象（默认全部）
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())                           // 发布时间
   updatedAt DateTime @updatedAt                                 // 最后编辑时间
     
@@ -210,6 +211,7 @@ model Announcement {
   // 作者删除时，authorId 置空，不删除公告
 
   @@index([pinned(sort: Desc), createdAt(sort: Desc)])  // 常用查询：置顶优先 + 最新排序
+  @@index([targetId]) 
 }
 
 // ────────────────────────────────────────────────

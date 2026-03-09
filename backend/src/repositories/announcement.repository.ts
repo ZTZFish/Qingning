@@ -5,6 +5,8 @@ export const createAnnouncement = async (data: {
   content: string;
   authorId?: number;
   pinned?: boolean;
+  targetId?: number;
+  isRead?: boolean;
 }) => {
   return await prisma.announcement.create({
     data: {
@@ -12,6 +14,8 @@ export const createAnnouncement = async (data: {
       content: data.content,
       authorId: data.authorId ?? null,
       pinned: data.pinned ?? false,
+      targetId: data.targetId ?? 0,
+      isRead: data.isRead ?? false,
     },
   });
 };
@@ -57,7 +61,7 @@ export const findAllAnnouncements = async (
   take: number,
   search?: string
 ) => {
-  const where: any = {};
+  const where: any = { targetId: 0 };
 
   if (search) {
     where.title = { contains: search };
@@ -83,4 +87,52 @@ export const findAllAnnouncements = async (
   ]);
 
   return { announcements, total };
+};
+
+export const findPersonalMessages = async (
+  userId: number,
+  skip: number,
+  take: number,
+  search?: string
+) => {
+  const where: any = { targetId: userId };
+
+  if (search) {
+    where.title = { contains: search };
+  }
+
+  const [messages, total] = await prisma.$transaction([
+    prisma.announcement.findMany({
+      where,
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            realName: true,
+          },
+        },
+      },
+      orderBy: [{ createdAt: "desc" }],
+      skip,
+      take,
+    }),
+    prisma.announcement.count({ where }),
+  ]);
+
+  return { messages, total };
+};
+
+export const markPersonalMessageRead = async (id: number, userId: number) => {
+  const result = await prisma.announcement.updateMany({
+    where: { id, targetId: userId },
+    data: { isRead: true },
+  });
+  return result.count;
+};
+
+export const countUnreadPersonalMessages = async (userId: number) => {
+  return await prisma.announcement.count({
+    where: { targetId: userId, isRead: false },
+  });
 };

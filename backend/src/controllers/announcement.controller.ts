@@ -5,7 +5,10 @@ import {
   removeAnnouncement,
   getAnnouncementList,
   getAnnouncementDetail,
+  getPersonalMessageList,
+  markMyMessageRead,
 } from "../services/announcement.service";
+import { Role } from "@prisma/client";
 
 export const create = async (req: Request, res: Response) => {
   try {
@@ -72,11 +75,16 @@ export const remove = async (req: Request, res: Response) => {
 
 export const getList = async (req: Request, res: Response) => {
   try {
+    const operatorId = (req as any).user.id;
     const page = parseInt(req.query.page as string, 10) || 1;
     const pageSize = parseInt(req.query.pageSize as string, 10) || 10;
     const search = (req.query.search as string) || undefined;
+    const type = (req.query.type as string) || "public";
 
-    const result = await getAnnouncementList(page, pageSize, search);
+    const result =
+      type === "messages"
+        ? await getPersonalMessageList(operatorId, page, pageSize, search)
+        : await getAnnouncementList(page, pageSize, search);
 
     res.status(200).json({
       code: 200,
@@ -90,13 +98,30 @@ export const getList = async (req: Request, res: Response) => {
 
 export const getDetail = async (req: Request, res: Response) => {
   try {
+    const operatorId = (req as any).user.id;
+    const operatorRole = (req as any).user.role as Role;
     const { id } = req.params;
-    const result = await getAnnouncementDetail(parseInt(id, 10));
+    const result = await getAnnouncementDetail(
+      operatorId,
+      operatorRole,
+      parseInt(id, 10)
+    );
     res.status(200).json({
       code: 200,
       message: "获取成功",
       data: result,
     });
+  } catch (error: any) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+};
+
+export const markRead = async (req: Request, res: Response) => {
+  try {
+    const operatorId = (req as any).user.id;
+    const { id } = req.params;
+    await markMyMessageRead(operatorId, parseInt(id, 10));
+    res.status(200).json({ code: 200, message: "已读成功" });
   } catch (error: any) {
     res.status(400).json({ code: 400, message: error.message });
   }

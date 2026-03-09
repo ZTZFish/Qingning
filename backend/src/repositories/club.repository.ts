@@ -221,9 +221,9 @@ export const countPendingMembershipsByLeader = async (leaderId: number) => {
     where: { leaderId, isDeleted: false },
     select: { id: true },
   });
-  
-  const clubIds = clubs.map(c => c.id);
-  
+
+  const clubIds = clubs.map((c) => c.id);
+
   if (clubIds.length === 0) return 0;
 
   // 2. 统计这些社团的待审核成员
@@ -504,11 +504,11 @@ export const findAllClubs = async (
   }
 
   let orderBy: any = { createdAt: "desc" };
-  if (sortBy === 'memberCount') {
+  if (sortBy === "memberCount") {
     orderBy = {
       members: {
-        _count: 'desc'
-      }
+        _count: "desc",
+      },
     };
   }
 

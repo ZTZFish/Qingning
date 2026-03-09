@@ -6,6 +6,7 @@ import {
   remove,
   getList,
   getDetail,
+  markRead,
 } from "../controllers/announcement.controller";
 import { authenticateJWT, checkRole } from "../middlewares/auth.middleware";
 import { Role } from "@prisma/client/index.js";
@@ -14,6 +15,9 @@ const router = express.Router();
 
 // 获取公告列表 (公开或需登录视需求定，这里设为需登录)
 router.get("/", authenticateJWT, getList);
+
+// 将个人消息标记为已读
+router.put("/messages/:id/read", authenticateJWT, markRead);
 
 // 获取公告详情
 router.get("/:id", authenticateJWT, getDetail);

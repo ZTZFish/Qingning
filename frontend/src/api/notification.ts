@@ -10,6 +10,7 @@ export interface PendingCounts {
     pendingJoinApplications: number;
     pendingActivityEnrollments: number;
   };
+  unreadMessages: number;
 }
 
 export const getPendingCounts = () => {
