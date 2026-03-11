@@ -191,33 +191,6 @@ const handleActivityClick = (activity: any) => {
             </div>
           </div>
         </div>
-
-        <!-- 快捷入口 -->
-        <div class="widget-card mt-6">
-          <div class="widget-header">
-            <h3>快捷入口</h3>
-          </div>
-          <div class="quick-links">
-            <div class="quick-link-item">
-              <div class="icon-box blue"><el-icon>
-                  <Monitor />
-                </el-icon></div>
-              <span>活动签到</span>
-            </div>
-            <div class="quick-link-item">
-              <div class="icon-box green"><el-icon>
-                  <User />
-                </el-icon></div>
-              <span>加入申请</span>
-            </div>
-            <div class="quick-link-item">
-              <div class="icon-box purple"><el-icon>
-                  <ChatDotRound />
-                </el-icon></div>
-              <span>我的消息</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -396,57 +369,5 @@ const handleActivityClick = (activity: any) => {
 .ann-date {
   font-size: 12px;
   color: #999;
-}
-
-.mt-6 {
-  margin-top: 24px;
-}
-
-.quick-links {
-  display: flex;
-  justify-content: space-between;
-}
-
-.quick-link-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.icon-box {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  transition: all 0.3s;
-}
-
-.icon-box.blue {
-  background: #ecf5ff;
-  color: #409eff;
-}
-
-.icon-box.green {
-  background: #f0f9eb;
-  color: #67c23a;
-}
-
-.icon-box.purple {
-  background: #f4f4f5;
-  color: #909399;
-}
-
-.quick-link-item:hover .icon-box {
-  transform: scale(1.1);
-}
-
-.quick-link-item span {
-  font-size: 12px;
-  color: #606266;
 }
 </style>
