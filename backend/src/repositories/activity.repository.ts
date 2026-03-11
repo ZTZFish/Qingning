@@ -292,3 +292,10 @@ export const findAllActivities = async (
 
   return { activities, total };
 };
+
+export const softDeleteActivitiesByClubId = async (clubId: number) => {
+  return await prisma.activity.updateMany({
+    where: { clubId },
+    data: { isDeleted: true },
+  });
+};

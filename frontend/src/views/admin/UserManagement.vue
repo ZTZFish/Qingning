@@ -285,7 +285,9 @@ const searchNewLeader = async (query: string) => {
         pageSize: 20,
         search: query,
       });
-      userOptions.value = res.list.filter((u) => u.role !== Role.ADMIN); // 排除管理员
+      userOptions.value = res.list.filter(
+        (u) => u.role !== Role.ADMIN && !u.isDeleted
+      );
     } catch (error) {
       console.error(error);
     } finally {

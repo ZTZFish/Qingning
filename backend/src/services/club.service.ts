@@ -27,6 +27,7 @@ import {
   countApprovedMembersByClubIds,
   findApprovedLeaderMembershipClubIds,
 } from "../repositories/club.repository";
+import { softDeleteActivitiesByClubId } from "../repositories/activity.repository";
 import { updateUser, findUserById } from "../repositories/user.repository";
 import { deleteFile } from "../utils/file";
 import { formatDateTime } from "../utils/date";
@@ -470,6 +471,22 @@ export const auditClubApplication = async (
   });
 
   return updatedClub;
+};
+
+export const adminDissolveClub = async (operatorId: number, clubId: number) => {
+  const operator = await findUserById(operatorId);
+  if (!operator) throw new Error("用户不存在");
+  if (operator.role !== Role.ADMIN) throw new Error("无权操作");
+
+  const club = await findClubById(clubId);
+  if (!club || (club as any).isDeleted) throw new Error("社团不存在");
+
+  await updateClub(clubId, { isDeleted: true });
+  await softDeleteActivitiesByClubId(clubId);
+  deleteFile(club.coverImage);
+  deleteFile(club.materials);
+
+  return { success: true };
 };
 
 export const getAllClubs = async (

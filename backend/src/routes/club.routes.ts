@@ -19,6 +19,7 @@ import {
   auditApplication,
   updateClub,
   removeMember,
+  dissolveClub,
 } from "../controllers/club.controller";
 import { authenticateJWT, checkRole } from "../middlewares/auth.middleware";
 import { createUploadMiddleware } from "../middlewares/upload.middleware";
@@ -112,6 +113,14 @@ router.put(
   authenticateJWT,
   checkRole([Role.ADMIN]),
   transferLeader
+);
+
+// 管理员解散社团
+router.delete(
+  "/:id",
+  authenticateJWT,
+  checkRole([Role.ADMIN]),
+  dissolveClub
 );
 
 export default router;

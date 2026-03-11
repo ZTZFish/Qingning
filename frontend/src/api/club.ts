@@ -184,3 +184,7 @@ export function auditClubApplication(
 export function updateClubInfo(id: number, data: any) {
   return request.put(`/clubs/${id}`, data);
 }
+
+export function dissolveClub(id: number) {
+  return request.delete(`/clubs/${id}`);
+}

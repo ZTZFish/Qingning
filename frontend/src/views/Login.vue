@@ -106,7 +106,7 @@ const handleLogin = async () => {
       // router.push('/admin/dashboard')
       // ElMessage.info('管理员后台建设中...')
       // 暂时都跳转到首页
-      router.push("admin/users")
+      router.push("admin/analytics")
     } else if (res.user.role === Role.LEADER) {
       // router.push('/leader/dashboard')
       // ElMessage.info('社团负责人中心建设中...')

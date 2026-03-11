@@ -23,7 +23,7 @@ export const createUser = async (data: any) => {
 
 export const findUserByUsername = async (username: string) => {
   return await prisma.user.findUnique({
-    where: { username, isDeleted: false },
+    where: { username },
   });
 };
 
@@ -59,9 +59,10 @@ export const findUserById = async (id: number) => {
 export const findAllUsers = async (
   skip: number,
   take: number,
-  search?: string
+  search?: string,
+  includeDeleted: boolean = false
 ) => {
-  const where: any = { isDeleted: false };
+  const where: any = includeDeleted ? {} : { isDeleted: false };
 
   if (search) {
     where.OR = [

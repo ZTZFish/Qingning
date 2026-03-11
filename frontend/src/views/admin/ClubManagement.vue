@@ -45,7 +45,7 @@ import CommonList from "@/components/CommonList.vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
 import { Status, ClubType, type Column } from "@/types";
-import { getClubs } from "@/api/club";
+import { getClubs, dissolveClub } from "@/api/club";
 
 import { useRouter } from "vue-router";
 
@@ -177,14 +177,22 @@ const handleViewMaterials = (row: any) => {
   materialsDialogVisible.value = true;
 };
 
-const handleDelete = (row: any) => {
-  ElMessageBox.confirm(`确定要解散社团 ${row.name} 吗？解散后不可恢复！`, '警告', {
-    type: 'error'
-  }).then(() => {
-    clubs.value = clubs.value.filter(c => c.id !== row.id)
-    ElMessage.success('社团已解散')
-  })
-}
+const handleDelete = async (row: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要解散社团 ${row.name} 吗？解散后不可恢复！`,
+      "警告",
+      { type: "error" }
+    );
+    await dissolveClub(row.id);
+    ElMessage.success("社团已解散");
+    fetchClubs();
+  } catch (error) {
+    if (error !== "cancel") {
+      console.error(error);
+    }
+  }
+};
 </script>
 
 <style scoped>

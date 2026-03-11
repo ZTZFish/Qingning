@@ -101,6 +101,10 @@ export const loginUser = async (
     throw new Error("用户名或密码错误");
   }
 
+  if (user.isDeleted) {
+    throw new Error("该用户已被封禁，请联系管理员");
+  }
+
   // 验证用户角色
   // 逻辑修改：
   // 1. 如果请求身份是 ADMIN，则数据库必须是 ADMIN
@@ -258,7 +262,7 @@ export const getAllUserList = async (
 ) => {
   const skip = (page - 1) * pageSize;
   const take = pageSize;
-  const { users, total } = await findAllUsers(skip, take, search);
+  const { users, total } = await findAllUsers(skip, take, search, true);
   return {
     list: users,
     total,
