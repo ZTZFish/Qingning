@@ -54,6 +54,12 @@ const routes = [
         meta: { roles: [Role.ADMIN], title: "内容审批 - 青柠社团管理系统" },
       },
       {
+        path: "admin/analytics",
+        name: "admin-analytics",
+        component: () => import("../views/admin/DataAnalytics.vue"),
+        meta: { roles: [Role.ADMIN], title: "数据分析 - 青柠社团管理系统" },
+      },
+      {
         path: "admin/announcements",
         name: "admin-announcements",
         component: () => import("../views/admin/AnnouncementList.vue"),

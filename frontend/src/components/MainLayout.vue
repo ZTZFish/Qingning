@@ -39,6 +39,7 @@ const menuItems = computed(() => {
   if (role === 'ADMIN') {
     // 管理员菜单
     items = [
+      { id: 'analytics', label: '数据分析', icon: Monitor, path: '/admin/analytics' },
       { id: 'user-manage', label: '用户管理', icon: UserFilled, path: '/admin/users' },
       { id: 'club-manage', label: '社团管理', icon: Management, path: '/admin/clubs' },
       { id: 'activity-manage', label: '活动管理', icon: List, path: '/admin/activities' },
