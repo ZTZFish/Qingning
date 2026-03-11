@@ -3,7 +3,6 @@
     <CommonList title="社团管理" :data="clubs" :columns="columns" :total="total" action-width="320"
       :current-page="currentPage" :page-size="pageSize" @page-change="handlePageChange">
       <template #header-actions>
-        <el-button type="primary" @click="handleAddClub">创建社团</el-button>
         <el-input v-model="searchQuery" placeholder="搜索社团名称/类型/负责人" prefix-icon="Search"
           style="width: 240px; margin-left: 12px" clearable @input="handleSearch" />
       </template>
@@ -157,10 +156,6 @@ const handleReject = (row: any) => {
   }).catch(() => {
     // 用户取消操作，不做处理
   })
-}
-
-const handleAddClub = () => {
-  ElMessage.info('前往创建社团页面')
 }
 
 const handleDetail = (row: any) => {
