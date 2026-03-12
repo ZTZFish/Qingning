@@ -112,6 +112,12 @@ const routes = [
         component: () => import("@/views/Messages.vue"),
         meta: { title: "消息通知 - 青柠社团管理系统", requiresAuth: true },
       },
+      {
+        path: "recommendations",
+        name: "recommendations",
+        component: () => import("@/views/PersonalizedRecommendations.vue"),
+        meta: { title: "个性化推荐 - 青柠社团管理系统", requiresAuth: true },
+      },
     ],
   },
   {

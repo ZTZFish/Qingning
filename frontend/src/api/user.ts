@@ -42,9 +42,13 @@ export function getUserInfo() {
 
 /**
  * 更新用户信息
- * @param data { username?: string; avatar?: string }
+ * @param data { username?: string; avatar?: string; tags?: string[] }
  */
-export function updateUserInfo(data: { username?: string; avatar?: string }) {
+export function updateUserInfo(data: {
+  username?: string;
+  avatar?: string;
+  tags?: string[];
+}) {
   return request.put("/users/me", data);
 }
 

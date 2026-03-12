@@ -215,7 +215,7 @@ export const getProfile = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { username, email, realName, sex, studentId, avatar } = req.body;
+    const { username, email, realName, sex, studentId, avatar, tags } = req.body;
 
     const user = await updateUserProfile(userId, {
       username,
@@ -224,6 +224,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       sex,
       studentId: studentId ? parseInt(studentId, 10) : undefined,
       avatar,
+      tags,
     });
 
     res.status(200).json({

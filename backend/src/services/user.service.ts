@@ -193,7 +193,24 @@ export const getUserProfile = async (userId: number) => {
     realName: user.realName,
     sex: user.sex,
     studentId: user.studentId,
+    tags: Array.isArray((user as any).tags) ? (user as any).tags : [],
   };
+};
+
+const normalizeTags = (input: any) => {
+  if (input === undefined) return undefined;
+  if (!Array.isArray(input)) {
+    throw new Error("标签格式错误");
+  }
+  const normalized = input
+    .map((t) => (typeof t === "string" ? t.trim() : ""))
+    .filter((t) => t.length > 0)
+    .map((t) => t.slice(0, 20));
+  const unique = Array.from(new Set(normalized));
+  if (unique.length > 5) {
+    throw new Error("标签最多选择5个");
+  }
+  return unique;
 };
 
 // 更新用户个人资料
@@ -206,6 +223,7 @@ export const updateUserProfile = async (
     sex?: Sex;
     studentId?: number;
     avatar?: string;
+    tags?: any;
   }
 ) => {
   const updateData: any = {};
@@ -223,6 +241,9 @@ export const updateUserProfile = async (
   if (data.sex) updateData.sex = data.sex;
   if (data.studentId) updateData.studentId = data.studentId;
   if (data.avatar) updateData.avatar = data.avatar;
+  if (data.tags !== undefined) {
+    updateData.tags = normalizeTags(data.tags);
+  }
 
   return await updateUser(userId, updateData);
 };

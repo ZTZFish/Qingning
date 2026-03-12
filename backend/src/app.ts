@@ -7,6 +7,7 @@ import activityRoutes from "./routes/activity.routes"; // 导入活动路由
 import announcementRoutes from "./routes/announcement.routes"; // 导入公告路由
 import notificationRoutes from "./routes/notification.routes"; // 导入通知路由
 import analyticsRoutes from "./routes/analytics.routes"; // 导入数据分析路由
+import recommendationRoutes from "./routes/recommendation.routes"; // 导入推荐路由
 import path from "path"; // 导入 path 模块，用于处理文件路径
 import { fileURLToPath } from "url"; // ES模块中必须导入这个方法
 
@@ -35,6 +36,7 @@ app.use("/api/activities", activityRoutes); // 活动相关
 app.use("/api/announcements", announcementRoutes); // 公告相关
 app.use("/api/notifications", notificationRoutes); // 通知相关
 app.use("/api/admin/analytics", analyticsRoutes); // 管理员数据分析相关
+app.use("/api/recommendations", recommendationRoutes); // 个性化推荐相关
 
 // 测试接口
 app.get("/health", (_req, res) => {

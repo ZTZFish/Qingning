@@ -15,6 +15,7 @@ export const createUser = async (data: any) => {
       realName: true,
       sex: true,
       studentId: true,
+      tags: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -53,6 +54,21 @@ export const updateUserPassword = async (email: string, password: string) => {
 export const findUserById = async (id: number) => {
   return await prisma.user.findUnique({
     where: { id },
+    select: {
+      id: true,
+      username: true,
+      password: true,
+      email: true,
+      role: true,
+      avatar: true,
+      realName: true,
+      sex: true,
+      studentId: true,
+      tags: true,
+      createdAt: true,
+      updatedAt: true,
+      isDeleted: true,
+    },
   });
 };
 
@@ -84,6 +100,7 @@ export const findAllUsers = async (
         realName: true,
         sex: true,
         studentId: true,
+        tags: true,
         createdAt: true,
         updatedAt: true,
         isDeleted: true,
@@ -111,8 +128,10 @@ export const updateUser = async (id: number, data: any) => {
       realName: true,
       sex: true,
       studentId: true,
+      tags: true,
       createdAt: true,
       updatedAt: true,
+      isDeleted: true,
     },
   });
 };

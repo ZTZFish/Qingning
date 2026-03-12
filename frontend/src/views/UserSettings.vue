@@ -29,6 +29,27 @@
             <el-form-item label="用户名">
               <el-input v-model="basicForm.username" />
             </el-form-item>
+            <el-form-item label="兴趣标签">
+              <el-select
+                v-model="basicForm.tags"
+                multiple
+                filterable
+                allow-create
+                default-first-option
+                :multiple-limit="5"
+                collapse-tags
+                collapse-tags-tooltip
+                placeholder="选择或输入标签（最多5个）"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="tag in tagOptions"
+                  :key="tag"
+                  :label="tag"
+                  :value="tag"
+                />
+              </el-select>
+            </el-form-item>
             <el-form-item label="角色">
               <el-tag>{{ roleText }}</el-tag>
             </el-form-item>
@@ -78,7 +99,8 @@ const currentUser = ref<User | null>(null)
 
 const basicForm = ref({
   username: '',
-  avatar: ''
+  avatar: '',
+  tags: [] as string[]
 })
 
 const emailForm = ref({
@@ -101,11 +123,35 @@ const fetchUser = async () => {
       currentUser.value = res
       basicForm.value.username = res.username
       basicForm.value.avatar = res.avatar || ''
+      basicForm.value.tags = Array.isArray(res.tags) ? res.tags : []
     }
   } catch (error) {
     console.error(error)
   }
 }
+
+const tagOptions = [
+  '学术',
+  '竞赛',
+  '英语',
+  '编程',
+  'AI',
+  '产品',
+  '设计',
+  '摄影',
+  '绘画',
+  '音乐',
+  '舞蹈',
+  '篮球',
+  '足球',
+  '羽毛球',
+  '跑步',
+  '健身',
+  '志愿',
+  '公益',
+  '桌游',
+  '电竞'
+]
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
 

@@ -29,6 +29,7 @@ model User {
   realName    String   @default("")                              // 真实姓名
   sex         Sex      @default(UNKNOWN)                         // 性别
   studentId   Int      @unique                                   // 学号
+  tags        Json?                                             // 兴趣/技能标签（0-5个，业务层校验）
 
   createdAt   DateTime  @default(now())                         // 账号创建时间，自动设置为记录插入时刻
   updatedAt   DateTime  @updatedAt                               // 记录最后更新时间，自动更新

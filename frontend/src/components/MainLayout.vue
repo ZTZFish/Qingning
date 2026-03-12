@@ -12,6 +12,7 @@ import {
   Calendar,
   ChatDotRound,
   Plus,
+  StarFilled,
   UserFilled,
   Management,
   List,
@@ -79,6 +80,7 @@ const menuItems = computed(() => {
       { id: 'discover-clubs', label: '发现社团', icon: Search, path: '/clubs' },
       { id: 'my-clubs', label: '我的社团', icon: User, path: '/my' },
       { id: 'activities', label: '社团活动', icon: Calendar, path: '/activities' },
+      { id: 'recommendations', label: '个性化推荐', icon: StarFilled, path: '/recommendations' },
       { id: 'create-club', label: '创建社团', icon: Plus, path: '/create-club' }
     ]
   }

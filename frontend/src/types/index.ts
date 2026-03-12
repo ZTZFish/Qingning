@@ -84,6 +84,7 @@ export interface User {
   realName?: string;
   sex?: Sex;
   studentId?: number;
+  tags?: string[];
   createdAt: string;
   updatedAt?: string;
   isDeleted?: boolean;
